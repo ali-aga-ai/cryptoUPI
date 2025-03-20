@@ -1,3 +1,4 @@
 add edge cases that user creates an account in a bank which dne
 having additional constraints like no duplicate phone num
-in merchant services use speck instead of sha to encrypt mid to vmid
+VMID created using speck HOWEVER the vmid functionality is not complete yet (as per assignment req)
+change main.js, create an easier way to interface with user rather than a million different if else stmts

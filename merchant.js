@@ -1,7 +1,7 @@
 const WebSocket = require("ws");
 
 
-const connectToBank = () =>{
+const connectToBankMerchant = () =>{
     const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
 
     socket.onopen = () => {
@@ -26,7 +26,7 @@ const connectToBank = () =>{
 
 }
 
-const connectToMachine = () =>{
+const connectToMachineMerchant = () =>{
     const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
     machineSocket.onopen = () => {
@@ -47,4 +47,4 @@ const connectToMachine = () =>{
 
 }
 
-connectToMachine();
+module.exports = {connectToBankMerchant, connectToMachineMerchant};

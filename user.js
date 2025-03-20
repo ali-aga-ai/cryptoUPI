@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 
-connectToBank = () => {
+const connectToBankUser = () => {
   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
 
   socket.onopen = () => {
@@ -24,7 +24,7 @@ connectToBank = () => {
   };
 };
 
-const connectToMachine = () => {
+const connectToMachineUser = () => {
   const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
   // NEED TO HASH  / ENCODE THIS DATA
@@ -61,4 +61,4 @@ const connectToMachine = () => {
   };
 };
 
-connectToMachine();
+module.exports = { connectToBankUser, connectToMachineUser };
