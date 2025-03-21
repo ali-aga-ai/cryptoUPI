@@ -2,6 +2,15 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 
 const handleMerchant = (socket, data, merchants) => {
+  if (!banks[data.bankName]?.includes(data.ifsc)) {
+    socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
+    return;
+  }
+  const phoneExists = Object.values(users).some(u => u.phoneNum === data.phoneNum);
+  if (phoneExists) {
+    socket.send(JSON.stringify({ error: "Phone number already registered" }));
+    return;
+  }
   if (data.type == "init") {
     const identifier = data.ip + ":" + data.port;
 
@@ -30,6 +39,10 @@ const handleMerchant = (socket, data, merchants) => {
 };
 
 const handleUser = (socket, data, users) => {
+  if (!banks[data.bankName]?.includes(data.ifsc)) {
+    socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
+    return;
+  }
   if (data.type == "init") {
     const identifier = data.ip + ":" + data.port;
     const UID = crypto.randomBytes(8).toString("hex"); // unsure if this is how tbd

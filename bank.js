@@ -2,8 +2,10 @@
 const WebSocket = require("ws");
 const crypto = require("crypto");
 const {handleMerchant, handleUser, handleUPIMachine} = require("./bankServices"); 
-
-
+const banks = {
+  HDFC: ["hdfc1", "hdfc2"],
+  SBI: ["sbi1"]
+};
 const turnOnBank = () => {
   const server = new WebSocket.Server({ port: 8080 });
 
