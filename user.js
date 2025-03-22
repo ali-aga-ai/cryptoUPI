@@ -1,23 +1,38 @@
 const WebSocket = require("ws");
+const readline = require('readline');
 
 const connectToBankUser = () => {
   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
 
-  socket.onopen = () => {
-    // on open, it sends a message to the server
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const askQuestion = (query) => {
+    return new Promise((resolve) => rl.question(query, resolve));
+  };
+  
+  (async () => {
+    bankName = await askQuestion("enter bank name: ");
+    ifsc = await askQuestion("enter ifsc: ");
+    phoneNum = await askQuestion("enter phone number: ");
+    pin = await askQuestion("enter pin: ");
+    balance = await askQuestion("enter balance: ");
+  
     socket.send(
       JSON.stringify({
         type: "init",
         userType: "user",
-        bankName: "HDFC",
-        ifsc: "hdfc1",
-        phoneNum: 12345678,
-        pin: 321641, // 6 digit pin
-        balance: 1000,
+        bankName: bankName,
+        ifsc: ifsc,
+        phoneNum: phoneNum,
+        pin: pin,
+        balance: balance,
       })
     );
-    console.log("Connected to server");
-  };
+  })();
+  
 
   socket.onmessage = (event) => {
     console.log("Message from server:", event.data); // if it receives a message from the server, it logs it

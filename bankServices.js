@@ -6,7 +6,9 @@ const handleMerchant = (socket, data, merchants) => {
     socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
     return;
   }
-  const phoneExists = Object.values(users).some(u => u.phoneNum === data.phoneNum);
+  const phoneExists = Object.values(users).some(
+    (u) => u.phoneNum === data.phoneNum
+  );
   if (phoneExists) {
     socket.send(JSON.stringify({ error: "Phone number already registered" }));
     return;
@@ -39,11 +41,14 @@ const handleMerchant = (socket, data, merchants) => {
 };
 
 const handleUser = (socket, data, users) => {
-  if (!banks[data.bankName]?.includes(data.ifsc)) {
-    socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
-    return;
-  }
-  if (data.type == "init") {
+  if (data.type == "init") { 
+    // init suggests user Account is being created
+    
+    // if (!banks[data.bankName]?.includes(data.ifsc)) {
+    //   socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
+    //   return;
+    // }  // BANKS OBJECT IS NOT DEFINED
+
     const identifier = data.ip + ":" + data.port;
     const UID = crypto.randomBytes(8).toString("hex"); // unsure if this is how tbd
     const combinedData = data.phoneNum.toString() + UID.toString(); // unsure if this is how tbd
@@ -60,7 +65,8 @@ const handleUser = (socket, data, users) => {
       balance: data.balance,
     };
 
-    console.log(users);
+    console.log("User added: ", users);
+    socket.send("Account created", JSON.stringify({ MMID: MMID }));
   }
 };
 

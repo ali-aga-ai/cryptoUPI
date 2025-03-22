@@ -17,6 +17,11 @@ const files = {
   D: 'machine.js'
 };
 
+const askQuestion = (query) => {
+  return new Promise((resolve) => rl.question(query, resolve));
+};
+
+
 rl.question('Are you A) a banker B) a user C) a merchant D) a machine: ', (input) => {
   const choice = input.toUpperCase();
   

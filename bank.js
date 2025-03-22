@@ -16,7 +16,12 @@ const turnOnBank = () => {
   
   const merchants = {};
   const machines = {};
+  const txns = {}
   
+  console.log("Users :  ", users);
+  console.log("Merchants :  ", merchants);
+  console.log("Machines :  ", machines);
+  console.log("Txns :  ", txns);
   server.on("connection", (socket, req) => {
     // socket is the socket of the client who is connecting
   
@@ -27,6 +32,7 @@ const turnOnBank = () => {
   
     socket.on("message", (message) => {
       const data = JSON.parse(message);
+      console.log("Data received: ", data);
       if (data.userType == "user") {
           data.ip = ip;
           data.port = port;
