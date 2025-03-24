@@ -43,9 +43,10 @@ rl.question('Are you A) a banker B) a user C) a merchant D) a machine: ', (input
     else{
       console.log("Invalid choice");
     }
-    if(choice === 'D') {
-      turnOnMachine();
-    } 
+    // if(choice === 'D') {
+    //   turnOnMachine();
+    // } 
+    //the above if statement is not required 
   } else {
     console.log('Invalid input');
     rl.close();
