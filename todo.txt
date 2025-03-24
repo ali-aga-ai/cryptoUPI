@@ -2,3 +2,5 @@ add edge cases that user creates an account in a bank which dne(done)
 having additional constraints like no duplicate phone num(done but merchant side is left)
 VMID created using speck HOWEVER the vmid functionality is not complete yet (as per assignment req)
 change main.js, create an easier way to interface with user rather than a million different if else stmts
+also add functionality of connecting user and merchant with upi machine. currently as soon as user or merchant
+is selected the main.js file by defaults directs/connects them to the bank server and not the upi machine server.
