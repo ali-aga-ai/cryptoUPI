@@ -24,7 +24,7 @@ const askQuestion = (query) => {
 
 rl.question('Are you A) a banker B) a user C) a merchant D) a machine: ', (input) => {
   const choice = input.toUpperCase();
-  
+  rl.close()
   if (files[choice]) {
     if(choice == "A")  {
         turnOnBank();

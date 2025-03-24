@@ -67,7 +67,7 @@ const connectToBankUser = () => {
         break;
       }
     }
-  
+
     socket.send(
       JSON.stringify({
         type: "init",
