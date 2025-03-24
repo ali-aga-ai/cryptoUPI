@@ -100,6 +100,7 @@ const handleUser = (socket, data, users) => {
       message: "Account created successfully",
       MMID: MMID
     }));
+    console.log("User added",users);
   }
 };
 /*  Till here- 24th march  */
