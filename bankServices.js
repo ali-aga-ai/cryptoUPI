@@ -92,6 +92,8 @@ const handleUser = (socket, data, users) => {
       return;
     }
     // Generate MMID
+    const identifier = data.ip + ":" + data.port;
+    const UID = crypto.randomBytes(8).toString("hex"); // unsure if this is how tbd
     const combinedData = data.phoneNum + new Date().getTime().toString();
     const MMID = crypto.createHash("sha256").update(combinedData).digest("hex");
     // If all validations pass, send success message
@@ -100,6 +102,16 @@ const handleUser = (socket, data, users) => {
       message: "Account created successfully",
       MMID: MMID
     }));
+        users[MMID] = {
+      phoneNum: data.phoneNum,
+      bankName: data.bankName,
+      PIN: data.pin,
+      ifsc: data.ifsc,
+      balance: data.balance,
+      UID: UID,
+      IP: identifier,
+      balance: data.balance,
+    };
     console.log("User added",users);
   }
 };
