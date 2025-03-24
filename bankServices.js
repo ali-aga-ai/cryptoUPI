@@ -54,6 +54,11 @@ const handleMerchant = (socket, data, merchants) => {
       IP: identifier,
       balance: data.balance,
     };
+    socket.send(JSON.stringify({
+      type: "success",
+      message: "Account created successfully",
+      merchantID: merchantID
+    }));
     console.log(merchants);
   }
 };
