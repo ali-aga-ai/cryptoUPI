@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 const crypto = require("crypto");
-
+const {banks} = require("./bank_details.js");
 const handleMerchant = (socket, data, merchants) => {
   if (!banks[data.bankName]?.includes(data.ifsc)) {
     socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
@@ -40,36 +40,69 @@ const handleMerchant = (socket, data, merchants) => {
   }
 };
 
-const handleUser = (socket, data, users) => {
-  if (data.type == "init") { 
-    // init suggests user Account is being created
+// const handleUser = (socket, data, users) => {
+//   if (data.type == "init") { 
+//     // init suggests user Account is being created
     
-    // if (!banks[data.bankName]?.includes(data.ifsc)) {
-    //   socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
-    //   return;
-    // }  // BANKS OBJECT IS NOT DEFINED
+//     // if (!banks[data.bankName]?.includes(data.ifsc)) {
+//     //   socket.send(JSON.stringify({ error: "Invalid bank or IFSC" }));
+//     //   return;
+//     // }  // BANKS OBJECT IS NOT DEFINED
 
-    const identifier = data.ip + ":" + data.port;
-    const UID = crypto.randomBytes(8).toString("hex"); // unsure if this is how tbd
-    const combinedData = data.phoneNum.toString() + UID.toString(); // unsure if this is how tbd
+//     const identifier = data.ip + ":" + data.port;
+//     const UID = crypto.randomBytes(8).toString("hex"); // unsure if this is how tbd
+//     const combinedData = data.phoneNum.toString() + UID.toString(); // unsure if this is how tbd
 
-    const MMID = crypto.createHash("sha256").update(combinedData).digest("hex"); // unsure if this is how tbd
-    users[MMID] = {
-      phoneNum: data.phoneNum,
-      bankName: data.bankName,
-      PIN: data.pin,
-      ifsc: data.ifsc,
-      balance: data.balance,
-      UID: UID,
-      IP: identifier,
-      balance: data.balance,
-    };
+//     const MMID = crypto.createHash("sha256").update(combinedData).digest("hex"); // unsure if this is how tbd
+//     users[MMID] = {
+//       phoneNum: data.phoneNum,
+//       bankName: data.bankName,
+//       PIN: data.pin,
+//       ifsc: data.ifsc,
+//       balance: data.balance,
+//       UID: UID,
+//       IP: identifier,
+//       balance: data.balance,
+//     };
 
-    console.log("User added: ", users);
-    socket.send("Account created", JSON.stringify({ MMID: MMID }));
+//     console.log("User added: ", users);
+//     socket.send("Account created", JSON.stringify({ MMID: MMID }));
+//   }
+// };
+/*    UPDATED handleUser()-24th march from here  */
+const handleUser = (socket, data, users) => {
+  if (data.type == "init") {
+    // Check if the bank name exists in the banks object
+    if (!(data.bankName.toUpperCase() in banks)) {
+      socket.send(JSON.stringify({
+        type: "error",
+        errorType: "invalidBank",
+        message: "Invalid bank name. Please try again with a valid bank name."
+      }));
+      return; // Exit the function early
+    }
+
+    // Check if the IFSC code is valid for the given bank
+    if (!(banks[data.bankName.toUpperCase()]?.includes(data.ifsc))) {
+      socket.send(JSON.stringify({
+        type: "error",
+        errorType: "invalidIFSC",
+        message: "Invalid IFSC code. Please try again with a valid IFSC."
+      }));
+      return;
+    }
+    // Generate MMID
+    const combinedData = data.phoneNum + new Date().getTime().toString();
+    const MMID = crypto.createHash("sha256").update(combinedData).digest("hex");
+    // If all validations pass, send success message
+    socket.send(JSON.stringify({
+      type: "success",
+      message: "Account created successfully",
+      MMID: MMID
+    }));
   }
 };
-
+/*  Till here- 24th march  */
 const handleUPIMachine = (socket, data, machines, users, merchants) => {
   if (data.type == "init") {
     const identifier = data.ip + ":" + data.port;
