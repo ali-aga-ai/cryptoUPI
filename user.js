@@ -56,6 +56,7 @@ const connectToBankUser = () => {
     ifsc = await askQuestion("enter ifsc: ");
     phoneNum = await askQuestion("enter phone number: ");
     pin = await askQuestion("enter pin: ");
+    pwd = await askQuestion("enter password: ");
     // balance = await askQuestion("enter balance: ");
     // Checking whether balance is valid or not at user side
     while(true){
@@ -77,6 +78,7 @@ const connectToBankUser = () => {
         phoneNum: phoneNum,
         pin: pin,
         balance: balance,
+        pwd: pwd
       })
     );
   })();
