@@ -33,8 +33,16 @@ const handleMerchant = (socket, data) => {
 const handleUser = (socket, data, bankSocket) => {
   if (data.type == "txn") {
     const identifier = data.ip + ":" + data.port;
+    const VMIDBase64 = data.VMIDBase64
+    const encryptedVMID = Buffer.from(VMIDBase64, "base64");
+    const decryptedBytes = speck.decrypt(encryptedVMID, keyArray);
+    const decryptedText = new TextDecoder().decode(decryptedBytes);
+    console.log("Decrypted Text:", decryptedText);
+    // Extract 16-digit Merchant ID
+    const mID = decryptedText.match(/^[0-9A-Fa-f]{16}/)[0];//this may not work chk once
+    console.log("Extracted Merchant ID:", mID);
 
-    const resp = validateTxnThroughBank(bankSocket, data);
+    const resp = validateTxnThroughBank(bankSocket, data,mID);
     if (resp.approvalStatus) {
       socket.send("Transaction Approved");
     } else {
@@ -43,12 +51,12 @@ const handleUser = (socket, data, bankSocket) => {
   }
 };
 
-const validateTxnThroughBank = (bankSocket, data) => {
+const validateTxnThroughBank = (bankSocket, data,mID) => {
   bankSocket.send(
     JSON.stringify({
       type: "validateTxn",
       encodedData: data.encodedData,
-      VMID: data.VMID,
+      MID: mID,//modify this based on how and where msg is going.
     })
   );
 
