@@ -56,7 +56,17 @@ const connectToBankUser = () => {
     ifsc = await askQuestion("enter ifsc: ");
     phoneNum = await askQuestion("enter phone number: ");
     pin = await askQuestion("enter pin: ");
-    balance = await askQuestion("enter balance: ");
+    // balance = await askQuestion("enter balance: ");
+    // Checking whether balance is valid or not at user side
+    while(true){
+      balance = await askQuestion("enter balance: ");
+      if(isNaN(parseFloat(balance)) || parseFloat(balance) < 0){
+        console.log("Invalid balance. Please enter a valid balance.");
+      }
+      else{
+        break;
+      }
+    }
   
     socket.send(
       JSON.stringify({
