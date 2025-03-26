@@ -3,31 +3,30 @@ const crypto = require("crypto");
 const QRCode = require("qrcode");
 const createSpeck = require("generic-speck");
 
-const handleMerchant = (socket, data) => {
+const handleMerchant = async (socket, data) => {
   const speck = createSpeck(32); // Initialize the Speck cipher with a 32-bit block size
   const key = "1234567890abcdef1234567890abcdef"; // 128-bit key
-
+  const keyArray = new TextEncoder().encode(key);
   if (data.type == "init") {
     const identifier = data.ip + ":" + data.port;
 
     const currentTime = new Date().getTime();
-    const combinedData = data.merchantID.toString() + currentTime.toString();
+    console.log(data)
+    const combinedData = data.merchantID + currentTime.toString();
     // Convert data and key to Uint8Array
-    const plaintext = new TextEncoder().encode(combinedData);
-    const keyArray = new TextEncoder().encode(key);
-
-    const VMID = speck.encrypt(plaintext, keyArray);
-
-    // Convert encrypted data to base64 for QR compatibility
-    const VMIDBase64 = Buffer.from(VMID).toString("base64");
-
-    QRCode.toDataURL(VMIDBase64, (err, url) => {
-      if (err) {
-        console.error("QR Code Error:", err);
-        return;
-      }
-      socket.send(url);
-    });
+    console.log(combinedData)
+    const encoder = new TextEncoder();
+    let dataBytes = encoder.encode(combinedData);
+    dataBytes = dataBytes.slice(0, 16);
+    var encryptedBytes = speck.encrypt(dataBytes, keyArray);
+    encryptedBytes=encryptedBytes.toString();
+    const VMIDBuffer = Buffer.from(encryptedBytes);
+    const VMIDBase64 = VMIDBuffer.toString("base64");
+    const qrCodeUrl = await QRCode.toDataURL(VMIDBase64);
+    const fs = require("fs");
+    const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
+    fs.writeFileSync("qrcode.png", base64Data, "base64");
+    console.log("QR code saved as qrcode.png");
   }
 };
 const handleUser = (socket, data, bankSocket) => {
