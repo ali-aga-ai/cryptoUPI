@@ -22,6 +22,7 @@ const handleMerchant = (socket, data, merchants) => {
     }));
     return;
   }
+  //Can be done if we setup a database/blockchain as of now can be done with an array if required
   // const phoneExists = Object.values(merchants).some(
   //   (u) => u.phoneNum === data.phoneNum
   // );
@@ -130,6 +131,27 @@ const handleUser = (socket, data, users) => {
       MMID: MMID
     }));
     console.log("User added: ", users);
+  }
+  else if(data.type == "login"){
+    if(!users[data.phoneNum]){
+      socket.send(JSON.stringify({
+        type : 'error' ,
+        message : 'User not found'
+      }))
+      return;
+    }
+    else if(users[data.phoneNum].pin!=data.pin){
+      socket.send(JSON.stringify(
+        {
+          type : "error",
+          message : "Invalid PIN entered"
+        }
+      ))
+      return;
+    }
+    else{
+      socket.send(JSON.stringify({ type: "success", message: "Login successful!", MMID: users[data.phoneNum].MMID }));
+    }
   }
 };
 
