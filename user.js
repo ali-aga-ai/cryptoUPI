@@ -1,5 +1,6 @@
 const WebSocket = require("ws");
 const readline = require('readline');
+const { type } = require("os");
 
 // const connectToBankUser = () => {
 //   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
@@ -52,6 +53,10 @@ const connectToBankUser = () => {
   };
   
   (async () => {
+    console.log("\n1. New User");
+    console.log("2. Existing User");
+    let choice = await askQuestion("Select an option (1 or 2): ");
+    if(choice==1){
     bankName = await askQuestion("enter bank name: ");
     ifsc = await askQuestion("enter ifsc: ");
     phoneNum = await askQuestion("enter phone number: ");
@@ -81,8 +86,26 @@ const connectToBankUser = () => {
         pwd: pwd
       })
     );
-  })();
-  
+  }
+  else if(choice == 2){
+     let phoneNum=await askQuestion("Enter Phone Number :");
+     let pin=await askQuestion("Enter your PIN :");
+     socket.send(
+      JSON.stringify(
+        {
+          type : "login",
+          userType : "user",
+          phoneNum : phoneNum,
+          pin : pin
+        }
+      )
+     );
+  }
+  else {
+    console.log("Invalid choice. Please restart.");
+    rl.close();
+    return;
+  }
 
   socket.onmessage = function(event) {
     const response = JSON.parse(event.data);
@@ -102,6 +125,7 @@ const connectToBankUser = () => {
       // connectToBankUser();
     }
   };
+})();
 };
 /*      Till here-24th march    */
 
