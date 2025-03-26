@@ -30,7 +30,7 @@ const connectToBankMerchant = () =>{
         break;
       }
     }
-
+    phoneNum = await askQuestion("enter phone number: ")
     socket.send(
       JSON.stringify({
         type: "init",
@@ -39,7 +39,8 @@ const connectToBankMerchant = () =>{
         bankName: bankName,
         ifsc: ifsc,
         balance: balance,
-        pwd: pwd
+        pwd: pwd,
+        phoneNum : phoneNum
       })
     );
   })();
@@ -61,6 +62,7 @@ const connectToBankMerchant = () =>{
     } else if (response.type === "success") {
       console.log("Account created successfully. MID:", response.merchantID);
       // connectToBankUser();
+      connectToMachineMerchant(response.merchantID); // To generate QR right after
     }
   };
 
@@ -87,7 +89,7 @@ const connectToBankMerchant = () =>{
 
 }
 
-const connectToMachineMerchant = () =>{
+const connectToMachineMerchant = (merchantID) =>{
     const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
     machineSocket.onopen = () => {
@@ -96,13 +98,20 @@ const connectToMachineMerchant = () =>{
           JSON.stringify({
             type: "init",
             userType: "merchant", 
-            merchantID: 4214214,// will have to update with the merchant id generated.
+            merchantID: merchantID,// will have to update with the merchant id generated.
           })
         );
       };
       
       machineSocket.onmessage = (event) => {
-        console.log("Message from server:", event.data); // if it receives a message from the server, it logs it
+        const response=JSON.parse(event.data)
+        if(response.qrCodeUrl){
+          console.log("QR Code Generated:", response.qrCodeUrl);
+          console.log("Open this URL in your browser to view the QR Code.");
+        } else {
+          console.log("Error:", response.error);
+        }
+        // if it receives a message from the server, it logs it
       }; // you will receuve a QR code link, on browser search the link and you will be redirected to the QR code image
       
 
