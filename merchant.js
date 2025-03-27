@@ -30,6 +30,7 @@ const connectToBankMerchant = () =>{
         break;
       }
     }
+    rl.close()
     socket.send(
       JSON.stringify({
         type: "init",
@@ -57,7 +58,7 @@ const connectToBankMerchant = () =>{
       }
     } else if (response.type === "success") {
       console.log("Account created successfully. MID:", response.merchantID);
-      // connectToMachineMerchant(response.merchantID); // To generate QR right after
+      connectToMachineMerchant(response.merchantID); // To generate QR right after
     }
   };
 
@@ -85,8 +86,7 @@ const connectToMachineMerchant = (merchantID) =>{
         } else {
           console.log("Error:", response.error);
         }
-        // if it receives a message from the server, it logs it
-      }; // you will receuve a QR code link, on browser search the link and you will be redirected to the QR code image
+      }; 
       
 
 }

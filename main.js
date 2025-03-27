@@ -1,7 +1,7 @@
 // BOILERPLATE FOR MAIN FILE, RUN THIS FILE TO START THE APPLICATION, INNEEFFICIENT AS FUCK
 
 const readline = require('readline');
-const { turnOnMachine , connectToBank} = require('./machine');
+const { turnOnMachine , connectToBankMachine} = require('./machine');
 const { connectToBankMerchant, connectToMachineMerchant } = require('./merchant');
 const { connectToBankUser, connectToMachineUser } = require('./user');
 const {turnOnBank} = require('./bank');
@@ -38,15 +38,11 @@ rl.question('Are you A) a banker B) a user C) a merchant D) a machine: ', (input
     }
     else if(choice == "D"){
       turnOnMachine();
-
+      connectToBankMachine();
     }
     else{
       console.log("Invalid choice");
     }
-    // if(choice === 'D') {
-    //   turnOnMachine();
-    // } 
-    //the above if statement is not required 
   } else {
     console.log('Invalid input');
     rl.close();

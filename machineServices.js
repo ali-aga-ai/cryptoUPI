@@ -2,6 +2,7 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 const QRCode = require("qrcode");
 const createSpeck = require("generic-speck");
+const merchantQRCodes  = require("./machineSources.js");
 
 const handleMerchant = async (socket, data) => {
   const speck = createSpeck(32); // Initialize the Speck cipher with a 32-bit block size
@@ -25,10 +26,14 @@ const handleMerchant = async (socket, data) => {
     const qrCodeUrl = await QRCode.toDataURL(VMIDBase64);
     const fs = require("fs");
     const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
+    merchantQRCodes[data.merchantID] = qrCodeUrl;
+    console.log(merchantQRCodes)
+    console.log(Object.keys(merchantQRCodes).length)
     fs.writeFileSync("qrcode.png", base64Data, "base64");
     console.log("QR code saved as qrcode.png");
   }
 };
+
 const handleUser = (socket, data, bankSocket) => {
   if (data.type == "txn") {
     const identifier = data.ip + ":" + data.port;

@@ -42,7 +42,6 @@ const turnOnBank = () => {
       const data = JSON.parse(message);
       console.log("Data received: ", data);
       if (data.userType == "user") {
-        console.log("yo")
         data.ip = ip;
         data.port = port;
         handleUser(socket, data, users);

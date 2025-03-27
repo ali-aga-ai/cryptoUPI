@@ -28,24 +28,14 @@ const handleMerchant = (socket, data, merchants) => {
     return;
   }
 
-  //Can be done if we setup a database/blockchain as of now can be done with an array if required
-  // const phoneExists = Object.values(merchants).some(
-  //   (u) => u.phoneNum === data.phoneNum
-  // );
-  // if (phoneExists) {
-  //   socket.send(JSON.stringify({ error: "Phone number already registered" }));
-  //   return;
-  // } chk if the merchant provides phn number too or not.
   if (data.type == "init") {
     const identifier = data.ip + ":" + data.port;
     const currentTime = new Date().getTime();
-    const combinedData = currentTime.toString() + data.pwd + data.userName; //also should we change the pwd from plaintext to hashed?
+    const combinedData = currentTime.toString() + data.pwd + data.userName; 
     const hashedPwd = crypto
       .createHash("sha256")
       .update(data.pwd)
-      .digest("hex"); /* this is correct as there wasn't any clear answer as
-                        to should we use plaintxt password or else hashed one
-                        but hashed is better as it improves security.*/
+      .digest("hex"); 
     const hashedID = crypto.createHash("sha256").update(combinedData).digest("hex");
 
     const merchantID = Math.random() < 0.5 ? hashedID.slice(-16) : hashedID.slice(0, 16);
@@ -72,7 +62,6 @@ const handleMerchant = (socket, data, merchants) => {
   }
 };
 
-/*    UPDATED handleUser()-24th march from here  */
 const handleUser = (socket, data, users) => {
   console.log(data)
   if (data.type == "init") {
@@ -182,7 +171,7 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
 
     machines[identifier] = "temp";
 
-    console.log(users);
+    console.log(machines);
   }
   if (data.type == "validateTxn") {
     const encodedData = data.encodedData;
