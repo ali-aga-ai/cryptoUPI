@@ -30,7 +30,6 @@ const connectToBankMerchant = () =>{
         break;
       }
     }
-    phoneNum = await askQuestion("enter phone number: ")
     socket.send(
       JSON.stringify({
         type: "init",
@@ -40,7 +39,6 @@ const connectToBankMerchant = () =>{
         ifsc: ifsc,
         balance: balance,
         pwd: pwd,
-        phoneNum : phoneNum
       })
     );
   })();
@@ -52,40 +50,16 @@ const connectToBankMerchant = () =>{
     if (response.type === "error") {
       if (response.errorType === "invalidBank") {
         console.log("INVALID BANK NAME");
-        // connecting again to enter correct details
-        connectToBankUser();
+        connectToBankMerchant();
       } else if (response.errorType === "invalidIFSC") {
         console.log("INVALID IFSC CODE");
-        // connecting again to enter correct details
-        connectToBankUser();
+        connectToBankMerchant();
       }
     } else if (response.type === "success") {
       console.log("Account created successfully. MID:", response.merchantID);
-      // connectToBankUser();
-      connectToMachineMerchant(response.merchantID); // To generate QR right after
+      // connectToMachineMerchant(response.merchantID); // To generate QR right after
     }
   };
-
-    // socket.onopen = () => {
-    //     // on open, it sends a message to the server
-    //     socket.send(
-    //       JSON.stringify({
-    //         type: "init",
-    //         userType: "merchant",
-    //         userName: "merchant1",
-    //         bankName: "HDFC",
-    //         pwd: "password123",
-    //         ifsc: "hdfc1",
-    //         balance: 10000,
-    //       })
-    //     );
-    //     console.log("Connected to server");
-    //   };
-      
-    //   socket.onmessage = (event) => {
-    //     console.log("Message from server:", event.data); // if it receives a message from the server, it logs it
-    //   };
-
 
 }
 

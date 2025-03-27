@@ -1,27 +1,33 @@
 const WebSocket = require("ws");
 const crypto = require("crypto");
-const {banks} = require("./bank_details.js");
+const { banks } = require("./bank_details.js");
+const { error } = require("console");
 
-/*    UPDATED handleMerchant()-24th march from here  */
+/*  MERCHANT REGISTRATION FINISHED, NEEDS PWD, BALANCE, USERNAME, BANKNAME, AND IFSC*/
 const handleMerchant = (socket, data, merchants) => {
   if (!(data.bankName.toUpperCase() in banks)) {
-    socket.send(JSON.stringify({
-      type: "error",
-      errorType: "invalidBank",
-      message: "Invalid bank name. Please try again with a valid bank name."
-    }));
+    socket.send(
+      JSON.stringify({
+        type: "error",
+        errorType: "invalidBank",
+        message: "Invalid bank name. Please try again with a valid bank name.",
+      })
+    );
     return; // Exit the function early
   }
 
   // Check if the IFSC code is valid for the given bank
-  if (!(banks[data.bankName.toUpperCase()]?.includes(data.ifsc))) {
-    socket.send(JSON.stringify({
-      type: "error",
-      errorType: "invalidIFSC",
-      message: "Invalid IFSC code. Please try again with a valid IFSC."
-    }));
+  if (!banks[data.bankName.toUpperCase()]?.includes(data.ifsc)) {
+    socket.send(
+      JSON.stringify({
+        type: "error",
+        errorType: "invalidIFSC",
+        message: "Invalid IFSC code. Please try again with a valid IFSC.",
+      })
+    );
     return;
   }
+
   //Can be done if we setup a database/blockchain as of now can be done with an array if required
   // const phoneExists = Object.values(merchants).some(
   //   (u) => u.phoneNum === data.phoneNum
@@ -37,15 +43,13 @@ const handleMerchant = (socket, data, merchants) => {
     const hashedPwd = crypto
       .createHash("sha256")
       .update(data.pwd)
-      .digest("hex");/* this is correct as there wasn't any clear answer as
+      .digest("hex"); /* this is correct as there wasn't any clear answer as
                         to should we use plaintxt password or else hashed one
                         but hashed is better as it improves security.*/
-    const hashedID = crypto
-      .createHash("sha256")
-      .update(combinedData)
-      .digest("hex");
-    const type = Math.random() < 0.5 ? "first" : "last";
-    const merchantID = type === "last" ? hashedID.slice(-16) : hashedID.slice(0, 16);
+    const hashedID = crypto.createHash("sha256").update(combinedData).digest("hex");
+
+    const merchantID = Math.random() < 0.5 ? hashedID.slice(-16) : hashedID.slice(0, 16);
+
     merchants[merchantID] = {
       pwd: hashedPwd,
       bankName: data.bankName,
@@ -55,102 +59,119 @@ const handleMerchant = (socket, data, merchants) => {
       IP: identifier,
       balance: data.balance,
     };
-    socket.send(JSON.stringify({
-      type: "success",
-      message: "Account created successfully",
-      merchantID: merchantID
-    }));
+
+    socket.send(
+      JSON.stringify({
+        type: "success",
+        message: "Account created successfully",
+        merchantID: merchantID,
+      })
+    );
+
     console.log(merchants);
   }
 };
 
 /*    UPDATED handleUser()-24th march from here  */
 const handleUser = (socket, data, users) => {
-  const phoneExists = Object.values(users).some(
-    (u) => u.phoneNum === data.phoneNum
-  );
-  if (phoneExists) {
-    socket.send(JSON.stringify({ error: "Phone number already registered" }));
-    return;
-  }
-  if (data.type == "init") { 
+  console.log(data)
+  if (data.type == "init") {
     // Check if the bank name exists in the banks object
+    const phoneExists = Object.values(users).some(
+      (u) => u.phoneNum === data.phoneNum
+    );
+    if (phoneExists) {
+      socket.send(JSON.stringify({ error: "Phone number already registered" }));
+      return;
+    }
+
     if (!(data.bankName.toUpperCase() in banks)) {
-      socket.send(JSON.stringify({
-        type: "error",
-        errorType: "invalidBank",
-        message: "Invalid bank name. Please try again with a valid bank name."
-      }));
+      socket.send(
+        JSON.stringify({
+          type: "error",
+          errorType: "invalidBank",
+          message:
+            "Invalid bank name. Please try again with a valid bank name.",
+        })
+      );
       return; // Exit the function early
     }
 
     // Check if the IFSC code is valid for the given bank
-    if (!(banks[data.bankName.toUpperCase()]?.includes(data.ifsc))) {
-      socket.send(JSON.stringify({
-        type: "error",
-        errorType: "invalidIFSC",
-        message: "Invalid IFSC code. Please try again with a valid IFSC."
-      }));
+    if (!banks[data.bankName.toUpperCase()]?.includes(data.ifsc)) {
+      socket.send(
+        JSON.stringify({
+          type: "error",
+          errorType: "invalidIFSC",
+          message: "Invalid IFSC code. Please try again with a valid IFSC.",
+        })
+      );
       return;
     }
     // init suggests user Account is being created
     const identifier = data.ip + ":" + data.port;
     const currentTime = new Date().getTime();
-    const combinedData = currentTime.toString() + data.pwd + data.userName;//
-    const hashedPwd = crypto //have doubt reg this as in assignment it was mentioned that user reg is same as merchant
-                            // i implemented the generation of uid similar to mid. also should this pwd be saved?
-      .createHash("sha256")
-      .update(data.pwd)
-      .digest("hex");/* this is correct as there wasn't any clear answer as
-                        to should we use plaintxt password or else hashed one
-                        but hashed is better as it improves security.*/
+    const combinedData = currentTime.toString() + data.pwd + data.userName; //
+    
     const hashedID = crypto
       .createHash("sha256")
       .update(combinedData)
       .digest("hex");
-    const type = Math.random() < 0.5 ? "first" : "last";
-    const UID = type === "last" ? hashedID.slice(-16) : hashedID.slice(0, 16);
-    const combinedUID = data.phoneNum.toString() + UID.toString();
+    const UID = Math.random() < 0.5  ? hashedID.slice(-16) : hashedID.slice(0, 16);
+    const combinedUID = data.phoneNum.toString() + UID.toString(); // Using UID and phoneNum to create MMID
 
-    const MMID = crypto.createHash("sha256").update(combinedUID).digest("hex");//this gives a 64 digit (256-bit)  hexadecimal number
-                                                                              //but according to online sources,gpt and real life situation
-                                                                              //it should be a 7 digit id not 64 digits. so should we implement truncation?
-    users[MMID] = {
+    const MMID = crypto.createHash("sha256").update(combinedUID).digest("hex"); //this gives a 64 digit (256-bit)  hexadecimal number
+    //but according to online sources,gpt and real life situation
+    //it should be a 7 digit id not 64 digits. so should we implement truncation?
+    users[data.phoneNum] = {
+      mmid: MMID,
       phoneNum: data.phoneNum,
       bankName: data.bankName,
       PIN: data.pin,
       ifsc: data.ifsc,
-      //balance: data.balance,balance is twice
       UID: UID,
       IP: identifier,
       balance: data.balance,
     };
-    socket.send(JSON.stringify({
-      type: "success",
-      message: "Account created successfully",
-      MMID: MMID
-    }));
+    socket.send(
+      JSON.stringify({
+        type: "success",
+        message: "Account created successfully",
+        MMID: MMID,
+        successType: "init",
+      })
+    );
     console.log("User added: ", users);
-  }
-  else if(data.type == "login"){
-    if(!users[data.phoneNum]){
-      socket.send(JSON.stringify({
-        type : 'error' ,
-        message : 'User not found'
-      }))
+  } 
+  
+  else if (data.type == "login") {
+    if (!users[data.phoneNum]) {
+      socket.send(
+        JSON.stringify({
+          type: "error",
+          message: "User not found",
+          errorType: "invalidUser",
+        })
+      );
       return;
-    }
-    else if(users[data.phoneNum].pin!=data.pin){
-      socket.send(JSON.stringify(
-        {
-          type : "error",
-          message : "Invalid PIN entered"
-        }
-      ))
+    } else if (users[data.phoneNum].PIN != data.pin) {
+      socket.send(
+        JSON.stringify({
+          type: "error",
+          message: "Invalid PIN entered",
+          errorType: "invalidPIN",
+        })
+      );
       return;
-    }
-    else{
-      socket.send(JSON.stringify({ type: "success", message: "Login successful!", MMID: users[data.phoneNum].MMID }));
+    } else {
+      socket.send(
+        JSON.stringify({
+          type: "success",
+          message: "Login successful!",
+          MMID: users[data.phoneNum].mmid,
+          successType: "login",
+        })
+      );
     }
   }
 };
@@ -165,8 +186,8 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
   }
   if (data.type == "validateTxn") {
     const encodedData = data.encodedData;
-    const VMID = data.VMID;//this is done at the upi machine side i think
-    const MID = data.MID;// chk the data structure once and remove either vmid or mid.
+    const VMID = data.VMID; //this is done at the upi machine side i think
+    const MID = data.MID; // chk the data structure once and remove either vmid or mid.
     const decodedData = JSON.parse(encodedData); // need to correct this
 
     const MMID = decodedData.MMID;

@@ -1,4 +1,3 @@
-add edge cases that user creates an account in a bank which dne(done)
 having additional constraints like no duplicate phone num(done but merchant side is left(should be done if database/blockchain has been setup))
 VMID created using speck HOWEVER the vmid functionality is not complete yet (done as far as encryption part is concerned qr is also generated in between communication of merchant and machine)
 change main.js, create an easier way to interface with user rather than a million different if else stmts

@@ -2,44 +2,6 @@ const WebSocket = require("ws");
 const readline = require('readline');
 const { type } = require("os");
 
-// const connectToBankUser = () => {
-//   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
-
-//   const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//   });
-
-//   const askQuestion = (query) => {
-//     return new Promise((resolve) => rl.question(query, resolve));
-//   };
-  
-//   (async () => {
-//     bankName = await askQuestion("enter bank name: ");
-//     ifsc = await askQuestion("enter ifsc: ");
-//     phoneNum = await askQuestion("enter phone number: ");
-//     pin = await askQuestion("enter pin: ");
-//     balance = await askQuestion("enter balance: ");
-  
-//     socket.send(
-//       JSON.stringify({
-//         type: "init",
-//         userType: "user",
-//         bankName: bankName,
-//         ifsc: ifsc,
-//         phoneNum: phoneNum,
-//         pin: pin,
-//         balance: balance,
-//       })
-//     );
-//   })();
-  
-
-//   socket.onmessage = (event) => {
-//     console.log("Message from server:", event.data); // if it receives a message from the server, it logs it
-//   };
-// };
-/*    UPDATED - 24th march from here */
 const connectToBankUser = () => {
   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
 
@@ -47,11 +9,9 @@ const connectToBankUser = () => {
     input: process.stdin,
     output: process.stdout,
   });
-
   const askQuestion = (query) => {
     return new Promise((resolve) => rl.question(query, resolve));
   };
-  
   (async () => {
     console.log("\n1. New User");
     console.log("2. Existing User");
@@ -106,6 +66,7 @@ const connectToBankUser = () => {
     rl.close();
     return;
   }
+  rl.close();
 
   socket.onmessage = function(event) {
     const response = JSON.parse(event.data);
@@ -113,21 +74,30 @@ const connectToBankUser = () => {
     if (response.type === "error") {
       if (response.errorType === "invalidBank") {
         console.log("INVALID BANK NAME");
-        // connecting again to enter correct details
         connectToBankUser();
       } else if (response.errorType === "invalidIFSC") {
         console.log("INVALID IFSC CODE");
-        // connecting again to enter correct details
+        connectToBankUser();
+      }
+       else if (response.errorType === "invalidUser") {
+        console.log("PHONE NUMBER NOT REGISTERED");
+        connectToBankUser();
+      }
+       else if (response.errorType === "invalidPIN") {
+        console.log("INVALID PIN");
         connectToBankUser();
       }
     } else if (response.type === "success") {
+      if(response.successType === "login"){
+        console.log("Login successful. MMID:", response.MMID);
+      }
+      if(response.successType === "init"){
       console.log("Account created successfully. MMID:", response.MMID);
-      // connectToBankUser();
+      }
     }
   };
 })();
 };
-/*      Till here-24th march    */
 
 const connectToMachineUser = () => {
   const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
