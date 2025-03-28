@@ -58,13 +58,13 @@ const connectToBankMerchant = () =>{
       }
     } else if (response.type === "success") {
       console.log("Account created successfully. MID:", response.merchantID);
-      connectToMachineMerchant(response.merchantID); // To generate QR right after
+      connectToMachineMerchant(response.merchantID, mer_name); // To generate QR right after
     }
   };
 
 }
 
-const connectToMachineMerchant = (merchantID) =>{
+const connectToMachineMerchant = (merchantID, merchantName) =>{
     const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
     machineSocket.onopen = () => {
@@ -74,6 +74,7 @@ const connectToMachineMerchant = (merchantID) =>{
             type: "init",
             userType: "merchant", 
             merchantID: merchantID,// will have to update with the merchant id generated.
+            merchantName: merchantName
           })
         );
       };

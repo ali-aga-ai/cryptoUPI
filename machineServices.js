@@ -26,7 +26,7 @@ const handleMerchant = async (socket, data) => {
     const qrCodeUrl = await QRCode.toDataURL(VMIDBase64);
     const fs = require("fs");
     const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
-    merchantQRCodes[data.merchantID] = qrCodeUrl;
+    merchantQRCodes[data.merchantName] = qrCodeUrl; // saving QR codes using merchant name
     console.log(merchantQRCodes)
     console.log(Object.keys(merchantQRCodes).length)
     fs.writeFileSync("qrcode.png", base64Data, "base64");

@@ -9,3 +9,19 @@ also add functionality of connecting user and merchant with upi machine. current
 is selected the main.js file by defaults directs/connects them to the bank server and not the upi machine server.(connection between merchant and machine done if he is a new user)
 
 figure out proper sending of qr code to user
+
+WORKFLOW:
+BANK SERVER STARTS
+MACHINE SERVER STARTS AND CONNECTS TO BANK
+MERCHANT SERVER STARTS AND CONNECTS TO BANK AND MACHINE (CONNECCTING TO MACHHINE INVOLVES QR CODE SETUP)
+USER SERVER STARTS AND CONNECTS TO BANK
+
+USER WANTS TO DO A TXN, HE INPUTS MERCHANT ID / NAME, CORRESPONDING MERCHANT QR CODE IS FETCHED
+THE FETCHED QR CODE IS SCANNED FOR VMID ETC. 
+TXN DETAILS ARE FILLED
+TXN DATA ENCODED
+
+TXN SENT TO MACHINE FOR VALIDATION
+MACHINE ASKS BANK, BANK RESPONDS WITH APPROVAL STATUS
+TXN EXECUTED 
+
