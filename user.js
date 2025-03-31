@@ -102,24 +102,17 @@ const connectToBankUser = () => {
   });
 };
 
-const connectToMachineUser = () => {
+const connectToMachineUser = (transactionData) => {
   const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
-  // NEED TO HASH  / ENCODE THIS DATA
-  const encodedData = JSON.stringify({
-    MMID: 32242,
-    PIN: 131232,
-    txnAmount: 190,
-  });
-
+  
   machineSocket.onopen = () => {
     // on open, it sends a message to the server
     machineSocket.send(
       JSON.stringify({
         type: "txn",
         userType: "user",
-        encodedData: encodedData,
-        VMID: 23213,
+        encodedData: transactionData, // for now the data is not being hashed and sent, rather it is directly being sent becuase unclear whether pin needs to be hashed or whole txnData
       })
     );
   };
@@ -192,13 +185,12 @@ const txnDetails = () => {
             const pin = await askQuestion("Enter your PIN: ");
 
             const txnData = {
-              merchantId: "merchant123", // Add a valid merchantId
-              vmid,
+              VMID: vmid, 
               txnAmount: parseFloat(txnAmount),
-              mmid,
-              pin: crypto.createHash("sha256").update(pin).digest("hex"),
+              pin: pin,
+              MMID: mmid
             };
-
+            // hash the txnData and send it to the machine
             rl.close();
             resolve(txnData);
             machineSocket.close();
