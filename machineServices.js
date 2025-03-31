@@ -19,17 +19,17 @@ const handleMerchant = async (socket, data) => {
 
     const currentTime = new Date().getTime();
     console.log("Merchant ID in hex", data.merchantID);
-    const combinedData = parseInt(data.merchantID,16); // need to use current Time to encrypt
-    console.log("Merchant ID in integer",combinedData);
-    // Encrypt and properly handle the result
-    const encryptedHex = speck.encrypt(combinedData, key);
-
-    // Check what type of data is returned
-    console.log("Type of encrypted result:", typeof encryptedHex);
-    console.log("Encrypted Merchant ID:", encryptedHex);
-
     
-    const qrCodeUrl = await QRCode.toDataURL(encryptedHex.toString());
+    // Create a unique ID that combines merchant ID and a checksum
+    // This approach uses a hash of the merchant ID as a checksum
+    const merchantIDHex = data.merchantID.padStart(16, '0'); // Ensure 16 characters (64 bits)
+    const checksum = crypto.createHash('md5').update(merchantIDHex).digest('hex').substring(0, 8);
+    const uniqueID = `${merchantIDHex}-${checksum}`;
+    
+    console.log("Unique ID with checksum:", uniqueID);
+    
+    // Generate QR code directly with this unique ID
+    const qrCodeUrl = await QRCode.toDataURL(uniqueID);
 
     const fs = require("fs");
     const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
@@ -45,7 +45,6 @@ const handleMerchant = async (socket, data) => {
 };
 
 const handleUser = async (socket, data) => {
-
   const speck = createSpeck({
     bits: 16,
     rounds: 22,
@@ -57,33 +56,44 @@ const handleUser = async (socket, data) => {
   if (data.type == "txn") {
     try {
       console.log(data);
-      const encryptedHex = data.encodedData.VMID;
-      const encryptedToINT = parseInt(encryptedHex);
-      console.log("Encrypted String Value:", encryptedHex);
-      console.log("Encrypted Hex Type:", typeof encryptedHex);
-      console.log("Parsed into int:", encryptedToINT); // 33 (decimal)
-
-      // Now decode to text
-      const decryptedText = speck.decrypt(encryptedToINT, key);
-      console.log("Decrypted Text (merchant ID in):", decryptedText);
-      const merchantID = decryptedText.toString(16); // Convert the integer back to a hexadecimal string
-      console.log("Merchant ID in Hex:", merchantID);
+      const encodedData = data.encodedData.VMID;
+      
+      // Parse the merchant ID directly from the QR code data
+      // Expected format: "merchantIDHex-checksum"
+      const parts = encodedData.split('-');
+      
+      if (parts.length !== 2) {
+        throw new Error("Invalid QR code format. Expected merchantID-checksum format.");
+      }
+      
+      const merchantIDHex = parts[0];
+      const receivedChecksum = parts[1];
+      
+      // Verify the checksum to ensure data integrity
+      const calculatedChecksum = crypto.createHash('md5').update(merchantIDHex).digest('hex').substring(0, 8);
+      
+      if (receivedChecksum !== calculatedChecksum) {
+        throw new Error("Checksum verification failed. The QR code data may be corrupted.");
+      }
+      
+      console.log("Verified merchant ID from QR code:", merchantIDHex);
+      const merchantID = merchantIDHex;
       
       // Handle the transaction validation
-      const resp = await validateTxnThroughBank(data,merchantID);
+      const resp = await validateTxnThroughBank(data, merchantID);
       if (resp.approvalStatus) {
         socket.send("Transaction Approved");
       } else {
-        socket.send("Transaction Declined, reason: ", resp.approvalMessage);
+        socket.send(`Transaction Declined, reason: ${resp.approvalMessage}`);
       }
     } catch (error) {
       console.error("Error processing transaction:", error);
-      socket.send("Transaction Processing Error");
+      socket.send("Transaction Processing Error: " + error.message);
     }
   }
 };
 
-const validateTxnThroughBank = (data, mID) => {
+const validateTxnThroughBank = (data, merchantID) => {
   return new Promise((resolve, reject) => {
     const bankSocket = new WebSocket("ws://localhost:8080"); // Connects to the bank socket
 
@@ -94,7 +104,8 @@ const validateTxnThroughBank = (data, mID) => {
         JSON.stringify({
           type: "validateTxn",
           encodedData: data.encodedData,
-          MID: mID,
+          MID: merchantID,
+          userType: "machine"
         })
       );
     };
@@ -120,6 +131,5 @@ const validateTxnThroughBank = (data, mID) => {
     };
   });
 };
-
 
 module.exports = { handleMerchant, handleUser };

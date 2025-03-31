@@ -112,7 +112,7 @@ const handleUser = (socket, data, users) => {
     const MMID = crypto.createHash("sha256").update(combinedUID).digest("hex"); //this gives a 64 digit (256-bit)  hexadecimal number
     //but according to online sources,gpt and real life situation
     //it should be a 7 digit id not 64 digits. so should we implement truncation?
-    users[data.phoneNum] = {
+    users[MMID] = {
       mmid: MMID,
       phoneNum: data.phoneNum,
       bankName: data.bankName,
@@ -175,18 +175,20 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
   }
   if (data.type == "validateTxn") {
     const encodedData = data.encodedData;
-    const VMID = data.VMID; //this is done at the upi machine side i think
-    const MID = data.MID; // chk the data structure once and remove either vmid or mid.
-    const decodedData = JSON.parse(encodedData); // need to correct this
+    const merchantID = data.MID; // chk the data structure once and remove either vmid or mid.
+    const decodedData = encodedData; // need to correct this
+    console.log("Decoded Data: ", decodedData);
 
     const MMID = decodedData.MMID;
-    const pin = decodedData.PIN;
+    const pin = decodedData.pin;
     const txnAmount = decodedData.txnAmount;
 
-    if (users[MMID].pin == pin) {
+    if (users[MMID].PIN == pin) {
       if (users[MMID].balance >= txnAmount) {
         users[MMID].balance -= txnAmount;
-        merchants[MID].balance += txnAmount;
+        merchants[merchantID].balance += txnAmount;
+        console.log(users)
+        console.log(merchants)
         socket.send(
           JSON.stringify({ approvalStatus: true, approvalMessage: "Accepted" })
         );
