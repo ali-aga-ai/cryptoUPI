@@ -30,7 +30,7 @@ const connectToBankMerchant = () =>{
         break;
       }
     }
-    phoneNum = await askQuestion("enter phone number: ")
+    rl.close()
     socket.send(
       JSON.stringify({
         type: "init",
@@ -40,7 +40,6 @@ const connectToBankMerchant = () =>{
         ifsc: ifsc,
         balance: balance,
         pwd: pwd,
-        phoneNum : phoneNum
       })
     );
   })();
@@ -52,44 +51,20 @@ const connectToBankMerchant = () =>{
     if (response.type === "error") {
       if (response.errorType === "invalidBank") {
         console.log("INVALID BANK NAME");
-        // connecting again to enter correct details
-        connectToBankUser();
+        connectToBankMerchant();
       } else if (response.errorType === "invalidIFSC") {
         console.log("INVALID IFSC CODE");
-        // connecting again to enter correct details
-        connectToBankUser();
+        connectToBankMerchant();
       }
     } else if (response.type === "success") {
       console.log("Account created successfully. MID:", response.merchantID);
-      // connectToBankUser();
-      connectToMachineMerchant(response.merchantID); // To generate QR right after
+      connectToMachineMerchant(response.merchantID, mer_name); // To generate QR right after
     }
   };
 
-    // socket.onopen = () => {
-    //     // on open, it sends a message to the server
-    //     socket.send(
-    //       JSON.stringify({
-    //         type: "init",
-    //         userType: "merchant",
-    //         userName: "merchant1",
-    //         bankName: "HDFC",
-    //         pwd: "password123",
-    //         ifsc: "hdfc1",
-    //         balance: 10000,
-    //       })
-    //     );
-    //     console.log("Connected to server");
-    //   };
-      
-    //   socket.onmessage = (event) => {
-    //     console.log("Message from server:", event.data); // if it receives a message from the server, it logs it
-    //   };
-
-
 }
 
-const connectToMachineMerchant = (merchantID) =>{
+const connectToMachineMerchant = (merchantID, merchantName) =>{
     const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
     machineSocket.onopen = () => {
@@ -99,6 +74,7 @@ const connectToMachineMerchant = (merchantID) =>{
             type: "init",
             userType: "merchant", 
             merchantID: merchantID,// will have to update with the merchant id generated.
+            merchantName: merchantName
           })
         );
       };
@@ -111,8 +87,7 @@ const connectToMachineMerchant = (merchantID) =>{
         } else {
           console.log("Error:", response.error);
         }
-        // if it receives a message from the server, it logs it
-      }; // you will receuve a QR code link, on browser search the link and you will be redirected to the QR code image
+      }; 
       
 
 }
