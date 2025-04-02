@@ -2,6 +2,13 @@ const WebSocket = require("ws");
 const crypto = require("crypto");
 const { banks } = require("./bank_details.js");
 const { error } = require("console");
+const { SHA256 } = require("crypto-js");
+const { Block, Blockchain } = require("./blockchain.js");
+
+// storing bank blockchains
+let hdfcChain = new Blockchain();
+let iciciChain = new Blockchain();
+let sbiChain = new Blockchain();
 
 /*  MERCHANT REGISTRATION FINISHED, NEEDS PWD, BALANCE, USERNAME, BANKNAME, AND IFSC*/
 const handleMerchant = (socket, data, merchants) => {
@@ -192,6 +199,9 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
         socket.send(
           JSON.stringify({ approvalStatus: true, approvalMessage: "Accepted" })
         );
+        // Adding the transaction to the blckchain
+        addTxnToBlockchain(users, MMID, txnAmount);
+        console.log("Transaction added to blockchain successfully!");
       } else {
         socket.send(
           JSON.stringify({
@@ -210,4 +220,44 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
     }
   }
 };
+
+const addTxnToBlockchain = (users, MMID, amount) => {
+  let currentTime = new Date().toString();
+  let blockchain = hdfcChain; // or iciciChain or sbiChain based on the bank
+  if(users[MMID].bankName.toUpperCase() == "HDFC"){
+    blockchain = hdfcChain;
+  }
+  else if(users[MMID].bankName.toUpperCase() == "ICICI"){
+    blockchain = iciciChain;
+  }
+  else if(users[MMID].bankName.toUpperCase() == "SBI"){
+    blockchain = sbiChain;
+  }
+  const UID = users[MMID].UID;
+  const transactionId = SHA256(UID + MMID + currentTime + amount).toString(); // SHA256 hash of MMID, timestamp and amount
+  const block = new Block(
+    blockchain.chain.length,
+    '',
+    currentTime,
+    transactionId
+  );
+  blockchain.addBlock(block); // Add the block to the blockchain
+  console.log("Txn added to " + blockchain.toString());
+  console.log(JSON.stringify(blockchain, null, 4));
+}
+
+const getTransactionsFromBank = (BankName) =>{
+  let blockchain = hdfcChain; // or iciciChain or sbiChain based on the bank
+  if(BankName.toUpperCase() == "HDFC"){
+    blockchain = hdfcChain;
+  }
+  else if(BankName.toUpperCase() == "ICICI"){
+    blockchain = iciciChain;
+  }
+  else if(BankName.toUpperCase() == "SBI"){
+    blockchain = sbiChain;
+  }
+  console.log(JSON.stringify(blockchain,null,4));
+}
+
 module.exports = { handleMerchant, handleUser, handleUPIMachine };
