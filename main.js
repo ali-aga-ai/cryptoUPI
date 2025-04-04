@@ -1,5 +1,4 @@
 // BOILERPLATE FOR MAIN FILE, RUN THIS FILE TO START THE APPLICATION, INNEEFFICIENT AS FUCK
-
 const readline = require("readline");
 const { turnOnMachine, connectToBankMachine } = require("./machine");
 const {
@@ -57,3 +56,4 @@ rl.question(
     }
   }
 );
+

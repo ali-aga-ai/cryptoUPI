@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>UPI App</h1>
+        
+        <div class="role-selection">
+            <h3>Select your role:</h3>
+            <button id="banker-btn">A) Bank</button>
+            <button id="user-btn">B) User</button>
+            <button id="merchant-btn">C) Merchant</button>
+            <button id="machine-btn">D) Machine</button>
+        </div>
+        
+        <!-- User Selection -->
+        <div id="user-selection" class="user-selection">
+            <h3>User Type:</h3>
+            <button id="existing-user-btn">Existing User</button>
+            <button id="new-user-btn">New User</button>
+        </div>
+        
+        <!-- Merchant Selection -->
+        <div id="merchant-selection" class="merchant-selection">
+            <h3>Merchant Type:</h3>
+            <button id="existing-merchant-btn">Existing Merchant</button>
+            <button id="new-merchant-btn">New Merchant</button>
+        </div>
+        
+        <!-- User Login Form -->
+        <div id="user-login-form" class="form">
+            <h3>User Login</h3>
+            <div class="form-group">
+                <label for="user-login-phone">Phone Number:</label>
+                <input type="text" id="user-login-phone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+                <label for="user-login-password">Password:</label>
+                <input type="password" id="user-login-password" placeholder="Enter your password">
+            </div>
+            <button id="login-user-btn" class="submit-btn">Login</button>
+        </div>
+        
+        <!-- Merchant Login Form -->
+        <div id="merchant-login-form" class="form">
+            <h3>Merchant Login</h3>
+            <div class="form-group">
+                <label for="merchant-login-phone">Phone Number:</label>
+                <input type="text" id="merchant-login-phone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+                <label for="merchant-login-password">Password:</label>
+                <input type="password" id="merchant-login-password" placeholder="Enter your password">
+            </div>
+            <button id="login-merchant-btn" class="submit-btn">Login</button>
+        </div>
+        
+        <!-- New User Registration Form -->
+        <div id="user-registration-form" class="form">
+            <h3>User Registration</h3>
+            <div class="form-group">
+                <label for="bank-name">Bank Name:</label>
+                <input type="text" id="bank-name" placeholder="Enter your bank name">
+            </div>
+            <div class="form-group">
+                <label for="ifsc-code">IFSC Code:</label>
+                <input type="text" id="ifsc-code" placeholder="Enter IFSC code">
+            </div>
+            <div class="form-group">
+                <label for="phone-number">Phone Number:</label>
+                <input type="text" id="phone-number" placeholder="Enter phone number">
+            </div>
+            <div class="form-group">
+                <label for="user-pin">PIN:</label>
+                <input type="password" id="user-pin" placeholder="Enter 4-digit PIN">
+            </div>
+            <div class="form-group">
+                <label for="user-password">Password:</label>
+                <input type="password" id="user-password" placeholder="Enter password">
+            </div>
+            <button id="register-user-btn" class="submit-btn">Register</button>
+        </div>
+        
+        <!-- New Merchant Registration Form -->
+        <div id="merchant-registration-form" class="form">
+            <h3>Merchant Registration</h3>
+            <div class="form-group">
+                <label for="merchant-name">Business Name:</label>
+                <input type="text" id="merchant-name" placeholder="Enter business name">
+            </div>
+            <div class="form-group">
+                <label for="merchant-bank">Bank Name:</label>
+                <input type="text" id="merchant-bank" placeholder="Enter your bank name">
+            </div>
+            <div class="form-group">
+                <label for="merchant-ifsc">IFSC Code:</label>
+                <input type="text" id="merchant-ifsc" placeholder="Enter IFSC code">
+            </div>
+            <div class="form-group">
+                <label for="merchant-phone">Phone Number:</label>
+                <input type="text" id="merchant-phone" placeholder="Enter phone number">
+            </div>
+            <div class="form-group">
+                <label for="merchant-pin">PIN:</label>
+                <input type="password" id="merchant-pin" placeholder="Enter 4-digit PIN">
+            </div>
+            <div class="form-group">
+                <label for="merchant-password">Password:</label>
+                <input type="password" id="merchant-password" placeholder="Enter password">
+            </div>
+            <button id="register-merchant-btn" class="submit-btn">Register</button>
+        </div>
+        
+        <!-- Transaction Form -->
+        <div id="transaction-form" class="form">
+            <h3>Transaction Details</h3>
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <input type="number" id="amount" placeholder="Enter transaction amount">
+            </div>
+            <div class="form-group">
+                <label for="merchant-id">Merchant ID:</label>
+                <input type="text" id="merchant-id" placeholder="Enter merchant ID">
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <input type="text" id="description" placeholder="Enter transaction description">
+            </div>
+            <button id="submit-transaction" class="submit-btn">Submit Transaction</button>
+        </div>
+        
+        <!-- Merchant Transaction View -->
+        <div id="merchant-transaction-view" class="form">
+            <h3>Merchant Transaction Dashboard</h3>
+            <div class="form-group">
+                <label>Merchant ID: <span id="display-merchant-id">M1234</span></label>
+            </div>
+            <div class="form-group">
+                <label>Status: Active and ready to receive payments</label>
+            </div>
+            <div class="form-group">
+                <button id="view-transactions-btn" class="submit-btn">View Recent Transactions</button>
+            </div>
+        </div>
+        
+        <div id="output" class="output">Select a role to begin...</div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
