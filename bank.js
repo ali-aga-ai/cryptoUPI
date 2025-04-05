@@ -10,7 +10,6 @@ const { banks } = require("./bank_details.js");
 
 const fs = require("fs");
 const KEY_PATH = "./bank_rsa_keys";
-
 // Load existing keys or generate new ones
 let publicKey, privateKey;
 if (fs.existsSync(`${KEY_PATH}_public.pem`)) {

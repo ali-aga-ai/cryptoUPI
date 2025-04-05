@@ -16,6 +16,7 @@ const encryptWithPublicKey = (plaintext) => {
     Buffer.from(plaintext, "utf8")
   ).toString("base64");
 };
+
 // Load latest data
 function loadFromFile() {
   if (fs.existsSync("merchantQRCodes.json")) {
