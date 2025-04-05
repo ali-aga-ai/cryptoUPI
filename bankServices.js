@@ -10,6 +10,17 @@ let hdfcChain = new Blockchain();
 let iciciChain = new Blockchain();
 let sbiChain = new Blockchain();
 
+const decryptWithPrivateKey = (encryptedBase64) => {
+  return crypto.privateDecrypt(
+    {
+      key: global.bankPrivateKey, // Retrieved from bank.js
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    Buffer.from(encryptedBase64, "base64")
+  ).toString("utf8");
+};
+
 /*  MERCHANT REGISTRATION FINISHED, NEEDS PWD, BALANCE, USERNAME, BANKNAME, AND IFSC*/
 const handleMerchant = (socket, data, merchants) => {
   if (!(data.bankName.toUpperCase() in banks)) {
@@ -114,6 +125,7 @@ const handleUser = (socket, data, users) => {
       .update(combinedData)
       .digest("hex");
     const UID = Math.random() < 0.5  ? hashedID.slice(-16) : hashedID.slice(0, 16);
+    console.log("UID: ", UID);
     const combinedUID = data.phoneNum.toString() + UID.toString(); // Using UID and phoneNum to create MMID
 
     const MMID = crypto.createHash("sha256").update(combinedUID).digest("hex"); //this gives a 64 digit (256-bit)  hexadecimal number
@@ -187,7 +199,7 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
     console.log("Decoded Data: ", decodedData);
 
     const MMID = decodedData.MMID;
-    const pin = decodedData.pin;
+    const pin = decryptWithPrivateKey(decodedData.pin);
     const txnAmount = decodedData.txnAmount;
 
     if (users[MMID].PIN == pin) {

@@ -6,6 +6,16 @@ const QRCode = require("qrcode");
 const fs = require("fs");
 const crypto = require("crypto");
 
+const encryptWithPublicKey = (plaintext) => {
+  return crypto.publicEncrypt(
+    {
+      key: global.bankPublicKey, // Retrieved from bank.js
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    Buffer.from(plaintext, "utf8")
+  ).toString("base64");
+};
 // Load latest data
 function loadFromFile() {
   if (fs.existsSync("merchantQRCodes.json")) {
@@ -187,7 +197,7 @@ const txnDetails = () => {
             const txnData = {
               VMID: vmid, 
               txnAmount: parseFloat(txnAmount),
-              pin: pin,
+              pin:encryptWithPublicKey(pin), // Encrypt the PIN with the public key
               MMID: mmid
             };
             // hash the txnData and send it to the machine
