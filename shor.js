@@ -1,3 +1,4 @@
+
 function gcd(a, b) {
     while(b !== 0){
         let temp = b;
@@ -47,3 +48,4 @@ var userID=1234567890123456; //this one is a sample 16-digit number
 var pin=3321; // this one is a sample 4-digit pin
 var factors = shor(pin);
 console.log(`Factors of ${pin} are: ${factors}`);
+
