@@ -5,6 +5,7 @@ const { createCanvas, loadImage } = require("canvas");
 const QRCode = require("qrcode");
 const fs = require("fs");
 const crypto = require("crypto");
+const { banks } = require("./bank_details.js");
 
 const encryptWithPublicKey = (plaintext) => {
   return crypto.publicEncrypt(
@@ -25,6 +26,48 @@ function loadFromFile() {
   }
   return {};
 }
+async function handleUserSession(socket, MMID) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const askQuestion = (query) => {
+    return new Promise((resolve) => rl.question(query, resolve));
+  };
+
+  console.log(`\nWelcome!`);
+  while (true) {
+    console.log("\nWhat would you like to do?");
+    console.log("1. Make a Transaction");
+    console.log("2. View Balance");
+    console.log("3. Exit");
+
+    const option = await askQuestion("Choose an option (1-3): ");
+    if (option === "1") {
+      const transactionData = await txnDetails();
+      transactionData.MMID = MMID;
+      await connectToMachineUser(transactionData, (msg) => {
+        console.log("Message from server:", msg);
+      });
+    } else if (option === "2") {
+      // socket.send(JSON.stringify({
+      //   type: "view_balance",
+      //   MMID,
+      // }));
+      console.log("Oops! That one's still under construction 🚧 — mind picking another option for now?");
+    } else if (option === "3") {
+      console.log("Logging out. Goodbye!");
+      rl.close();
+      socket.close();
+      break;
+    } else {
+      console.log("Invalid option. Please select 1, 2, or 3.");
+    }
+  }
+}
+
+
 const connectToBankUser = () => {
   const socket = new WebSocket("ws://localhost:8080");
 
@@ -42,14 +85,48 @@ const connectToBankUser = () => {
     try {
       console.log("\n1. New User");
       console.log("2. Existing User");
-      const choice = await askQuestion("Select an option (1 or 2): ");
+      let choice;
+      while (true) {
+        choice = await askQuestion("Select an option (1 or 2): ");
+        if (choice === "1" || choice === "2") break;
+        console.log("Invalid choice. Please enter 1 or 2.");
+      }
 
       if (choice == "1") {
-        const bankName = await askQuestion("Enter bank name: ");
-        const ifsc = await askQuestion("Enter IFSC: ");
-        const phoneNum = await askQuestion("Enter phone number: ");
-        const pin = await askQuestion("Enter PIN: ");
-        const pwd = await askQuestion("Enter password: ");
+        let bankName;
+        while (true) {
+          bankName = (await askQuestion("Enter bank name: ")).toUpperCase();
+          if (banks[bankName]) break;
+          console.log("Invalid bank name. Please enter a valid one.");
+        }
+          
+        let ifsc;
+        while (true) {
+          ifsc = (await askQuestion("Enter IFSC: ")).toLowerCase();
+          if (banks[bankName].includes(ifsc)) break;
+          console.log("Invalid IFSC. Please enter a valid one");
+        }
+
+        let phoneNum;
+        while (true) {
+          phoneNum = await askQuestion("Enter phone number (10 digits): ");
+          if (/^\d{10}$/.test(phoneNum)) break;
+          console.log("Invalid phone number. Please enter a 10-digit number.");
+        }
+          
+        let pin;
+        while (true) {
+          pin = await askQuestion("Enter 4-digit PIN: ");
+          if (/^\d{4}$/.test(pin)) break;
+          console.log("Invalid PIN. Please enter a 4-digit number.");
+        }
+          
+        let pwd;
+        while (true) {
+          pwd = await askQuestion("Enter password (min 6 characters, at least one number and one letter): ");
+          if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(pwd)) break;
+          console.log("Invalid password. Must be at least 6 characters with at least one number and one letter.");
+        }
 
         let balance;
         while (true) {
@@ -71,8 +148,19 @@ const connectToBankUser = () => {
           })
         );
       } else if (choice == "2") {
-        const phoneNum = await askQuestion("Enter Phone Number: ");
-        const pin = await askQuestion("Enter your PIN: ");
+        let phoneNum;
+        while (true) {
+          phoneNum = await askQuestion("Enter Phone Number (10 digits): ");
+          if (/^\d{10}$/.test(phoneNum)) break;
+          console.log("Invalid phone number. Please enter a 10-digit number.");
+        }
+            
+        let pin;
+        while (true) {
+          pin = await askQuestion("Enter your 4-digit PIN: ");
+          if (/^\d{4}$/.test(pin)) break;
+          console.log("Invalid PIN. Please enter a 4-digit number.");
+        }
 
         socket.send(
           JSON.stringify({
@@ -82,11 +170,6 @@ const connectToBankUser = () => {
             pin,
           })
         );
-      } else {
-        console.log("Invalid choice. Please restart.");
-        rl.close();
-        reject("Invalid choice");
-        return;
       }
 
       rl.close();
@@ -101,6 +184,7 @@ const connectToBankUser = () => {
           console.log(
             `Success: ${response.successType}, MMID: ${response.MMID}`
           );
+          handleUserSession(socket, response.MMID);
           resolve({ MMID: response.MMID, successType: response.successType });
         }
       };
@@ -113,7 +197,7 @@ const connectToBankUser = () => {
   });
 };
 
-const connectToMachineUser = (transactionData) => {
+const connectToMachineUser = (transactionData, callback) => {
   const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
 
   
@@ -129,7 +213,9 @@ const connectToMachineUser = (transactionData) => {
   };
 
   machineSocket.onmessage = (event) => {
-    console.log("Message from server:", event.data);
+    // console.log("Message from server:", event.data);
+    callback(event.data);
+    machineSocket.close();
 
     // // the user receives the QR code from the machine, after they try to initiate a txn, they mut scan qr code, find vmid of the merchant and input it to confirm the txn
     // if (event.data.type === "scanCode") {
