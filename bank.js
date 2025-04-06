@@ -8,15 +8,40 @@ const {
 } = require("./bankServices");
 const { banks } = require("./bank_details.js");
 
+const fs = require("fs");
+const KEY_PATH = "./bank_rsa_keys";
+// Load existing keys or generate new ones
+let publicKey, privateKey;
+if (fs.existsSync(`${KEY_PATH}_public.pem`)) {
+  publicKey = fs.readFileSync(`${KEY_PATH}_public.pem`, "utf8");
+  privateKey = fs.readFileSync(`${KEY_PATH}_private.pem`, "utf8");
+} else {
+  const { publicKey: pub, privateKey: priv } = crypto.generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+  fs.writeFileSync(`${KEY_PATH}_public.pem`, pub);
+  fs.writeFileSync(`${KEY_PATH}_private.pem`, priv);
+  publicKey = pub;
+  privateKey = priv;
+}
+
+global.bankPrivateKey = privateKey;
+global.bankPublicKey = publicKey;
 const turnOnBank = () => {
   const server = new WebSocket.Server({ port: 8080 });
 
   const users = {
     alice: {
       pwd: "password123",
+      mmid: "1024",
+      uid: "1234",
+      phoneNum: "0123456789",
       bankName: "HDFC",
       ifsc: "hdfc1",
       balance: 1122,
+      PIN: "1234",
     },
     bob: { pwd: "hunter2", bankName: "HDFC", ifsc: "hdfc2", balance: 13213 },
   };

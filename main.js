@@ -38,10 +38,10 @@ rl.question(
         console.log("Bank Server Running");
       } else if (choice == "B") {
         const userDetails = await connectToBankUser();
-        const transactionData = await txnDetails();
-        console.log("User:", userDetails);
-        console.log("Transaction:", transactionData);
-        connectToMachineUser(transactionData)
+        // const transactionData = await txnDetails();
+        // console.log("User:", userDetails);
+        // console.log("Transaction:", transactionData);
+        // connectToMachineUser(transactionData)
       } else if (choice == "C") {
         connectToBankMerchant();
       } else if (choice == "D") {

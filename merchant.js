@@ -1,6 +1,6 @@
 const readline = require("readline");
 const WebSocket = require("ws");
-
+const { banks } = require("./bank_details.js");
 
 const connectToBankMerchant = () =>{
   const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
@@ -14,11 +14,40 @@ const connectToBankMerchant = () =>{
     return new Promise((resolve) => rl.question(query, resolve));
   };
   
+  let mer_name;
   (async () => {
-    mer_name = await askQuestion("enter name: ");
-    bankName = await askQuestion("enter bank name: ");//this wasn't mentioned in the assignment.
-    ifsc = await askQuestion("enter ifsc: ");
-    pwd = await askQuestion("enter password: ");
+    while (true) {
+      mer_name = await askQuestion("Enter Name: ");
+      if (/^[A-Za-z\s]{2,}$/.test(mer_name)) break;
+      console.log("Invalid name. Must contain at least 2 alphabetic characters.");
+    }
+
+    let bankName;
+    while (true) {
+      bankName = (await askQuestion("Enter bank name: ")).toUpperCase();
+      if (banks[bankName]) break;
+      console.log("Invalid bank name. Please enter a valid one.");
+    }
+      
+    let ifsc;
+    while (true) {
+      ifsc = (await askQuestion("Enter IFSC: ")).toLowerCase();
+      if (banks[bankName].includes(ifsc)) break;
+      console.log("Invalid IFSC. Please enter a valid one");
+    }
+    
+    let pwd;
+    while (true) {
+      pwd = await askQuestion("Enter password (min 6 characters, at least one number and one letter): ");
+      if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(pwd)) break;
+      console.log("Invalid password. Must be at least 6 characters with at least one number and one letter.");
+    }
+    
+    
+    // mer_name = await askQuestion("enter name: ");
+    // bankName = await askQuestion("enter bank name: ");//this wasn't mentioned in the assignment.
+    // ifsc = await askQuestion("enter ifsc: ");
+    // pwd = await askQuestion("enter password: ");
     // balance = await askQuestion("enter balance: ");
     // Checking whether balance is valid or not at merchant side
     while(true){
