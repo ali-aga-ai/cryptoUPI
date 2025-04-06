@@ -1,9 +1,19 @@
 {
+  "name": "payment-system",
+  "version": "1.0.0",
+  "description": "Payment system with websocket interface",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
     "canvas": "^3.1.0",
     "crypto-js": "^4.2.0",
+    "express": "^5.1.0",
     "generic-speck": "^1.1.1",
     "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1",
     "ws": "^8.18.1"
   }
 }

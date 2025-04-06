@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .role-selection {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .role-card {
+            width: 150px;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .role-card.selected {
+            border: 2px solid #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .role-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .form-section {
+            display: none;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            font-family: monospace;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .warning {
+            color: #ff9800;
+        }
+        .info {
+            color: #2196F3;
+        }
+        .qr-display {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .qr-image {
+            display: inline-block;
+            margin: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+        }
+        .tab.active {
+            border-color: #ddd;
+            border-radius: 4px 4px 0 0;
+            background-color: white;
+            border-bottom: 1px solid white;
+            position: relative;
+            bottom: -1px;
+        }
+        .hidden {
+            display: none;
+        }
+        .step {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Payment System</h1>
+        
+        <div class="role-selection">
+            <div class="role-card" data-role="bank">
+                <div class="role-icon">🏦</div>
+                <div>Bank</div>
+            </div>
+            <div class="role-card" data-role="user">
+                <div class="role-icon">👤</div>
+                <div>User</div>
+            </div>
+            <div class="role-card" data-role="merchant">
+                <div class="role-icon">🛒</div>
+                <div>Merchant</div>
+            </div>
+            <div class="role-card" data-role="machine">
+                <div class="role-icon">🏧</div>
+                <div>Machine</div>
+            </div>
+        </div>
+
+        <!-- Bank Form -->
+        <div id="bankForm" class="form-section">
+            <h2>Bank Operations</h2>
+            <button id="turnOnBankBtn">Turn On Bank</button>
+            <div id="bankStatus" class="status-panel">
+                <div class="status-title">Bank Status:</div>
+                <div id="bankStatusLog"></div>
+            </div>
+        </div>
+
+        <!-- User Form -->
+        <div id="userForm" class="form-section">
+            <h2>User Operations</h2>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="userRegisterTab">1. Register/Login</div>
+                <div class="tab" data-tab="userTransactionTab">2. Make Transaction</div>
+            </div>
+            
+            <div id="userRegisterTab" class="tab-content">
+                <div class="form-group">
+                    <label>User Type:</label>
+                    <div>
+                        <input type="radio" id="newUser" name="userType" value="new" checked>
+                        <label for="newUser">New User</label>
+                        <input type="radio" id="existingUser" name="userType" value="existing" style="margin-left: 20px;">
+                        <label for="existingUser">Existing User</label>
+                    </div>
+                </div>
+                
+                <!-- New User Fields -->
+                <div id="newUserFields">
+                    <div class="form-group">
+                        <label for="bankName">Bank Name:</label>
+                        <input type="text" id="bankName" placeholder="Enter bank name">
+                    </div>
+                    <div class="form-group">
+                        <label for="ifsc">IFSC Code:</label>
+                        <input type="text" id="ifsc" placeholder="Enter IFSC code">
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNum">Phone Number:</label>
+                        <input type="text" id="phoneNum" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="pin">PIN:</label>
+                        <input type="password" id="pin" placeholder="Enter PIN">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPwd">Password:</label>
+                        <input type="password" id="userPwd" placeholder="Enter password">
+                    </div>
+                    <div class="form-group">
+                        <label for="balance">Balance:</label>
+                        <input type="number" id="balance" placeholder="Enter initial balance" min="0">
+                    </div>
+                </div>
+                
+                <!-- Existing User Fields -->
+                <div id="existingUserFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="loginPhoneNum">Phone Number:</label>
+                        <input type="text" id="loginPhoneNum" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPin">PIN:</label>
+                        <input type="password" id="loginPin" placeholder="Enter PIN">
+                    </div>
+                </div>
+                
+                <button id="connectToBankUserBtn">Connect to Bank</button>
+                
+                <div id="userMMID" class="success hidden">
+                    <strong>Your MMID: </strong><span id="mmidValue"></span>
+                </div>
+            </div>
+            
+            <div id="userTransactionTab" class="tab-content" style="display: none;">
+                <div class="step">
+                    <div class="step-title">Step 1: Enter Merchant Name</div>
+                    <div class="form-group">
+                        <label for="txnMerchantName">Merchant Name:</label>
+                        <input type="text" id="txnMerchantName" placeholder="Enter merchant name">
+                    </div>
+                    <button id="getQRCodeBtn">Get QR Code</button>
+                </div>
+                
+                <div class="step" id="step2QR" style="display: none;">
+                    <div class="step-title">Step 2: Scan QR Code</div>
+                    <div class="qr-display" id="qrDisplay">
+                        <div id="qrCode" class="qr-image"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="vmid">Virtual Merchant ID (VMID):</label>
+                        <input type="text" id="vmid" placeholder="Enter VMID from QR Code">
+                    </div>
+                    <button id="enterVMIDBtn">Enter VMID</button>
+                </div>
+                
+                <div class="step" id="step3Transaction" style="display: none;">
+                    <div class="step-title">Step 3: Complete Transaction</div>
+                    <div class="form-group">
+                        <label for="txnAmount">Transaction Amount:</label>
+                        <input type="number" id="txnAmount" placeholder="Enter amount" min="0.01" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="txnMMID">Your MMID:</label>
+                        <input type="text" id="txnMMID" placeholder="Enter your MMID">
+                    </div>
+                    <div class="form-group">
+                        <label for="txnPin">Your PIN:</label>
+                        <input type="password" id="txnPin" placeholder="Enter your PIN">
+                    </div>
+                    <button id="sendTransactionBtn">Send Transaction</button>
+                </div>
+            </div>
+            
+            <div id="userStatus" class="status-panel">
+                <div class="status-title">User Status:</div>
+                <div id="userStatusLog"></div>
+            </div>
+        </div>
+
+        <!-- Merchant Form -->
+        <div id="merchantForm" class="form-section">
+            <h2>Merchant Operations</h2>
+            
+            <div class="form-group">
+                <label for="merchantName">Merchant Name:</label>
+                <input type="text" id="merchantName" placeholder="Enter merchant name">
+            </div>
+            <div class="form-group">
+                <label for="merchantBank">Bank Name:</label>
+                <input type="text" id="merchantBank" placeholder="Enter bank name">
+            </div>
+            <div class="form-group">
+                <label for="merchantIFSC">IFSC Code:</label>
+                <input type="text" id="merchantIFSC" placeholder="Enter IFSC code">
+            </div>
+            <div class="form-group">
+                <label for="merchantPwd">Password:</label>
+                <input type="password" id="merchantPwd" placeholder="Enter password">
+            </div>
+            <div class="form-group">
+                <label for="merchantBalance">Balance:</label>
+                <input type="number" id="merchantBalance" placeholder="Enter initial balance" min="0">
+            </div>
+            
+            <button id="registerMerchantBtn">Register Merchant with Bank</button>
+            
+            <div id="merchantMID" class="success hidden">
+                <strong>Your Merchant ID: </strong><span id="midValue"></span>
+            </div>
+            
+            <div class="qr-display" id="merchantQRDisplay">
+                <h3>Your QR Code</h3>
+                <div id="merchantQRCode" class="qr-image"></div>
+            </div>
+            
+            <div id="merchantStatus" class="status-panel">
+                <div class="status-title">Merchant Status:</div>
+                <div id="merchantStatusLog"></div>
+            </div>
+        </div>
+
+        <!-- Machine Form -->
+        <div id="machineForm" class="form-section">
+            <h2>Machine Operations</h2>
+            <button id="turnOnMachineBtn">Turn On Machine</button>
+            <button id="connectToBankMachineBtn">Connect to Bank</button>
+            
+            <div id="machineStatus" class="status-panel">
+                <div class="status-title">Machine Status:</div>
+                <div id="machineStatusLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for WebSocket connections
+        let bankSocket = null;
+        let machineSocket = null;
+        let userMMID = null;
+        let merchantID = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up role selection
+            setupRoleSelection();
+            
+            // Set up tabs
+            setupTabs();
+            
+            // Set up user type toggle
+            setupUserTypeToggle();
+            
+            // Set up bank operations
+            setupBankOperations();
+            
+            // Set up user operations
+            setupUserOperations();
+            
+            // Set up merchant operations
+            setupMerchantOperations();
+            
+            // Set up machine operations
+            setupMachineOperations();
+        });
+        
+        // Utility functions for logging
+        function logBankStatus(message, type = 'info') {
+            logMessage('bankStatusLog', message, type);
+        }
+        
+        function logUserStatus(message, type = 'info') {
+            logMessage('userStatusLog', message, type);
+        }
+        
+        function logMerchantStatus(message, type = 'info') {
+            logMessage('merchantStatusLog', message, type);
+        }
+        
+        function logMachineStatus(message, type = 'info') {
+            logMessage('machineStatusLog', message, type);
+        }
+        
+        function logMessage(elementId, message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            
+            const logElement = document.getElementById(elementId);
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Setup role selection
+        function setupRoleSelection() {
+            const roleCards = document.querySelectorAll('.role-card');
+            const formSections = document.querySelectorAll('.form-section');
+            
+            roleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Remove selection from all cards
+                    roleCards.forEach(c => c.classList.remove('selected'));
+                    
+                    // Add selection to clicked card
+                    card.classList.add('selected');
+                    
+                    // Hide all form sections
+                    formSections.forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    // Show selected form section
+                    const role = card.getAttribute('data-role');
+                    document.getElementById(`${role}Form`).style.display = 'block';
+                });
+            });
+        }
+        
+        // Setup tabs
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Get parent tab container
+                    const tabContainer = tab.closest('.tabs');
+                    
+                    // Remove active class from all sibling tabs
+                    tabContainer.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all tab content
+                    const tabContents = tab.closest('.form-section').querySelectorAll('.tab-content');
+                    tabContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Show selected tab content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).style.display = 'block';
+                });
+            });
+        }
+        
+        // Setup user type toggle
+        function setupUserTypeToggle() {
+            const userTypeRadios = document.querySelectorAll('input[name="userType"]');
+            const newUserFields = document.getElementById('newUserFields');
+            const existingUserFields = document.getElementById('existingUserFields');
+            
+            userTypeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (radio.value === 'new') {
+                        newUserFields.style.display = 'block';
+                        existingUserFields.style.display = 'none';
+                    } else {
+                        newUserFields.style.display = 'none';
+                        existingUserFields.style.display = 'block';
+                    }
+                });
+            });
+        }
+        
+        // Setup bank operations
+        function setupBankOperations() {
+            const turnOnBankBtn = document.getElementById('turnOnBankBtn');
+            
+            turnOnBankBtn.addEventListener('click', () => {
+                logBankStatus('Starting bank server...', 'info');
+                
+                // Make API call to server to start the bank
+                fetch('/api/bank/turnOn', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logBankStatus('Bank server running on port 8080', 'success');
+                        turnOnBankBtn.disabled = true;
+                    } else {
+                        logBankStatus(`Failed to start bank server: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logBankStatus(`Error starting bank server: ${error.message}`, 'error');
+                });
+            });
+        }
+        
+        // Setup user operations
+        function setupUserOperations() {
+            const connectToBankUserBtn = document.getElementById('connectToBankUserBtn');
+            const getQRCodeBtn = document.getElementById('getQRCodeBtn');
+            const enterVMIDBtn = document.getElementById('enterVMIDBtn');
+            const sendTransactionBtn = document.getElementById('sendTransactionBtn');
+            
+            connectToBankUserBtn.addEventListener('click', () => {
+                const isNewUser = document.getElementById('newUser').checked;
+                let userData = {};
+                
+                if (isNewUser) {
+                    userData = {
+                        type: 'init',
+                        userType: 'user',
+                        bankName: document.getElementById('bankName').value,
+                        ifsc: document.getElementById('ifsc').value,
+                        phoneNum: document.getElementById('phoneNum').value,
+                        pin: document.getElementById('pin').value,
+                        pwd: document.getElementById('userPwd').value,
+                        balance: document.getElementById('balance').value
+                    };
+                } else {
+                    userData = {
+                        type: 'login',
+                        userType: 'user',
+                        phoneNum: document.getElementById('loginPhoneNum').value,
+                        pin: document.getElementById('loginPin').value
+                    };
+                }
+                
+                // Validate required fields
+                if ((isNewUser && (!userData.bankName || !userData.ifsc || !userData.phoneNum || !userData.pin || !userData.pwd || !userData.balance)) || 
+                    (!isNewUser && (!userData.phoneNum || !userData.pin))) {
+                    logUserStatus('Please fill all required fields', 'error');
+                    return;
+                }
+                
+                // Make API call to connect user to bank
+                fetch('/api/user/connectToBank', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logUserStatus(`Successfully connected to bank. MMID: ${data.MMID}`, 'success');
+                        userMMID = data.MMID;
+                        
+                        // Show MMID to user
+                        document.getElementById('mmidValue').textContent = data.MMID;
+                        document.getElementById('userMMID').classList.remove('hidden');
+                        
+                        // Prefill MMID in transaction tab
+                        document.getElementById('txnMMID').value = data.MMID;
+                        
+                        // Switch to transaction tab
+                        document.querySelector('[data-tab="userTransactionTab"]').click();
+                    } else {
+                        logUserStatus(`Failed to connect to bank: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logUserStatus(`Error connecting to bank: ${error.message}`, 'error');
+                });
+            });
+            
+            getQRCodeBtn.addEventListener('click', () => {
+                const merchantName = document.getElementById('txnMerchantName').value;
+                
+                if (!merchantName) {
+                    logUserStatus('Please enter merchant name', 'error');
+                    return;
+                }
+                
+                // Make API call to get QR code
+                fetch(`/api/merchant/getQRCode?merchantName=${encodeURIComponent(merchantName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logUserStatus('Received QR code for merchant', 'success');
+                        
+                        // Display QR code
+                        const qrCodeElement = document.getElementById('qrCode');
+                        qrCodeElement.innerHTML = '';
+                        
+                        new QRCode(qrCodeElement, {
+                            text: data.vmid.toString(),
+                            width: 128,
+                            height: 128
+                        });
+                        
+                        document.getElementById('qrDisplay').style.display = 'block';
+                        document.getElementById('step2QR').style.display = 'block';
+                    } else {
+                        logUserStatus(`Failed to get QR code: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logUserStatus(`Error getting QR code: ${error.message}`, 'error');
+                });
+            });
+            
+            enterVMIDBtn.addEventListener('click', () => {
+                const vmid = document.getElementById('vmid').value;
+                
+                if (!vmid) {
+                    logUserStatus('Please enter VMID from QR code', 'error');
+                    return;
+                }
+                
+                logUserStatus('VMID entered: ' + vmid, 'info');
+                document.getElementById('step3Transaction').style.display = 'block';
+            });
+            
+            sendTransactionBtn.addEventListener('click', () => {
+                const txnData = {
+                    VMID: document.getElementById('vmid').value,
+                    txnAmount: parseFloat(document.getElementById('txnAmount').value),
+                    MMID: document.getElementById('txnMMID').value,
+                    pin: document.getElementById('txnPin').value
+                };
+                
+                // Validate transaction data
+                if (!txnData.VMID || !txnData.txnAmount || isNaN(txnData.txnAmount) || txnData.txnAmount <= 0 || !txnData.MMID || !txnData.pin) {
+                    logUserStatus('Please fill all transaction details correctly', 'error');
+                    return;
+                }
+                
+                // Make API call to send transaction
+                fetch('/api/user/makeTransaction', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(txnData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logUserStatus(`Transaction initiated successfully. Transaction ID: ${data.transactionId}`, 'success');
+                    } else {
+                        logUserStatus(`Transaction failed: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logUserStatus(`Error sending transaction: ${error.message}`, 'error');
+                });
+            });
+        }
+        
+        // Setup merchant operations
+        function setupMerchantOperations() {
+            const registerMerchantBtn = document.getElementById('registerMerchantBtn');
+            
+            registerMerchantBtn.addEventListener('click', () => {
+                const merchantData = {
+                    type: 'init',
+                    userType: 'merchant',
+                    userName: document.getElementById('merchantName').value,
+                    bankName: document.getElementById('merchantBank').value,
+                    ifsc: document.getElementById('merchantIFSC').value,
+                    pwd: document.getElementById('merchantPwd').value,
+                    balance: document.getElementById('merchantBalance').value
+                };
+                
+                // Validate merchant data
+                if (!merchantData.userName || !merchantData.bankName || !merchantData.ifsc || !merchantData.pwd || !merchantData.balance || isNaN(parseFloat(merchantData.balance)) || parseFloat(merchantData.balance) < 0) {
+                    logMerchantStatus('Please fill all fields with valid values', 'error');
+                    return;
+                }
+                
+                // Make API call to register merchant
+                fetch('/api/merchant/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(merchantData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logMerchantStatus(`Merchant registered successfully. Merchant ID: ${data.merchantID}`, 'success');
+                        merchantID = data.merchantID;
+                        
+                        // Show Merchant ID
+                        document.getElementById('midValue').textContent = data.merchantID;
+                        document.getElementById('merchantMID').classList.remove('hidden');
+                        
+                        // Generate QR code
+                        generateMerchantQRCode(data.merchantID, merchantData.userName);
+                    } else {
+                        logMerchantStatus(`Failed to register merchant: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logMerchantStatus(`Error registering merchant: ${error.message}`, 'error');
+                });
+            });
+            
+            function generateMerchantQRCode(merchantID, merchantName) {
+                // Make API call to generate QR code
+                fetch('/api/merchant/generateQR', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        merchantID,
+                        merchantName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logMerchantStatus('QR code generated successfully', 'success');
+                        
+                        // Display QR code
+                        const qrCodeElement = document.getElementById('merchantQRCode');
+                        qrCodeElement.innerHTML = '';
+                        
+                        new QRCode(qrCodeElement, {
+                            text: merchantID.toString(),
+                            width: 128,
+                            height: 128
+                        });
+                        
+                        document.getElementById('merchantQRDisplay').style.display = 'block';
+                    } else {
+                        logMerchantStatus(`Failed to generate QR code: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logMerchantStatus(`Error generating QR code: ${error.message}`, 'error');
+                });
+            }
+        }
+        
+        // Setup machine operations
+        function setupMachineOperations() {
+            const turnOnMachineBtn = document.getElementById('turnOnMachineBtn');
+            const connectToBankMachineBtn = document.getElementById('connectToBankMachineBtn');
+            
+            turnOnMachineBtn.addEventListener('click', () => {
+                logMachineStatus('Starting machine server...', 'info');
+                
+                // Make API call to start the machine
+                fetch('/api/machine/turnOn', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logMachineStatus('Machine server running on port 8081', 'success');
+                        turnOnMachineBtn.disabled = true;
+                    } else {
+                        logMachineStatus(`Failed to start machine server: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logMachineStatus(`Error starting machine server: ${error.message}`, 'error');
+                });
+            });
+            
+            connectToBankMachineBtn.addEventListener('click', () => {
+                logMachineStatus('Connecting machine to bank...', 'info');
+                
+                // Make API call to connect machine to bank
+                fetch('/api/machine/connectToBank', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logMachineStatus('Machine connected to bank successfully', 'success');
+                        connectToBankMachineBtn.disabled = true;
+                    } else {
+                        logMachineStatus(`Failed to connect machine to bank: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    logMachineStatus(`Error connecting machine to bank: ${error.message}`, 'error');
+                });
+            });
+        }
+    </script>
+</body>
+</html>
