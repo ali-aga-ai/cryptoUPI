@@ -35,9 +35,13 @@ const turnOnBank = () => {
   const users = {
     alice: {
       pwd: "password123",
+      mmid: "1024",
+      uid: "1234",
+      phoneNum: "0123456789",
       bankName: "HDFC",
       ifsc: "hdfc1",
       balance: 1122,
+      PIN: "1234",
     },
     bob: { pwd: "hunter2", bankName: "HDFC", ifsc: "hdfc2", balance: 13213 },
   };
