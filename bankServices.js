@@ -163,7 +163,7 @@ const handleUser = (socket, data, users) => {
         JSON.stringify({
           type: "error",
           message: "User not found",
-          errorType: "invalidUser",
+          errorType: "invalidUser(check phone number again)",
         })
       );
       return;
@@ -199,13 +199,22 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
   }
   if (data.type == "validateTxn") {
     const encodedData = data.encodedData;
-    const merchantID = data.MID; // chk the data structure once and remove either vmid or mid.
+    const merchantID = data.MID;
     const decodedData = encodedData; // need to correct this
     console.log("Decoded Data: ", decodedData);
 
     const MMID = decodedData.MMID;
     const pin = decryptWithPrivateKey(decodedData.pin);
     const txnAmount = decodedData.txnAmount;
+    if (!users[MMID]) {
+      socket.send(JSON.stringify({
+          approvalStatus: false,
+          approvalMessage: "Invalid MMID: user not found.",
+        }));
+      console.log(`Invalid MMID received: ${MMID}`);
+      return;
+    }
+    
 
     if (users[MMID].PIN == pin) {
       if (users[MMID].balance >= txnAmount) {
@@ -234,4 +243,27 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
     }
   }
 };
-module.exports = { handleMerchant, handleUser, handleUPIMachine }
+
+const handleBalanceEnquiry = (socket,data,users) => {
+  const MMID = data.MMID;
+  if (users[MMID]) {
+    console.log("User found: ", users[MMID]);
+    socket.send(
+      JSON.stringify({
+        type: "balance_info",
+        message: "Balance Enquiry Successful",
+        balance: users[MMID].balance,
+      })
+    );
+  } else {
+    console.log("User not found");
+    socket.send(
+      JSON.stringify({
+        type: "error",
+        message: "User not found",
+        errorType: "invalidUser",
+      })
+    );
+  }
+}
+module.exports = { handleMerchant, handleUser, handleUPIMachine,handleBalanceEnquiry }

@@ -5,8 +5,10 @@ const {
   handleMerchant,
   handleUser,
   handleUPIMachine,
+  handleBalanceEnquiry,
 } = require("./bankServices");
 const { banks } = require("./bank_details.js");
+const merchants = require("./bank_state");
 
 const fs = require("fs");
 const KEY_PATH = "./bank_rsa_keys";
@@ -46,7 +48,6 @@ const turnOnBank = () => {
     bob: { pwd: "hunter2", bankName: "HDFC", ifsc: "hdfc2", balance: 13213 },
   };
 
-  const merchants = {};
   const machines = {};
   const txns = {};
 
@@ -80,6 +81,9 @@ const turnOnBank = () => {
         data.ip = ip;
         data.port = port;
         handleUPIMachine(socket, data, machines, users, merchants);
+      }
+      if (data.type == "view_balance"){
+        handleBalanceEnquiry(socket, data, users);        
       }
     });
   });
