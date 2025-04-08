@@ -6,6 +6,7 @@ const QRCode = require("qrcode");
 const fs = require("fs");
 const crypto = require("crypto");
 const { banks } = require("./bank_details.js");
+const merchants = require("./bank_state");
 
 const encryptWithPublicKey = (plaintext) => {
   return crypto.publicEncrypt(
@@ -18,7 +19,26 @@ const encryptWithPublicKey = (plaintext) => {
   ).toString("base64");
 };
 
-// Load latest data
+let rl;
+function createReadlineInterface() {
+  if (rl) rl.close();
+  rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+}
+
+const askQuestion = (query) => {
+  return new Promise((resolve) => {
+    createReadlineInterface();
+    rl.question(query, (answer) => {
+      rl.close();
+      rl = null;
+      resolve(answer);
+    });
+  });
+};
+
 function loadFromFile() {
   if (fs.existsSync("merchantQRCodes.json")) {
     const data = fs.readFileSync("merchantQRCodes.json");
@@ -27,15 +47,6 @@ function loadFromFile() {
   return {};
 }
 async function handleUserSession(socket, MMID) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const askQuestion = (query) => {
-    return new Promise((resolve) => rl.question(query, resolve));
-  };
-
   console.log(`\nWelcome!`);
   while (true) {
     console.log("\nWhat would you like to do?");
@@ -45,20 +56,26 @@ async function handleUserSession(socket, MMID) {
 
     const option = await askQuestion("Choose an option (1-3): ");
     if (option === "1") {
-      const transactionData = await txnDetails();
-      transactionData.MMID = MMID;
-      await connectToMachineUser(transactionData, (msg) => {
-        console.log("Message from server:", msg);
-      });
+      let retryCount = 0;
+      let transactionSuccess = false;
+      while (retryCount < 3 && !transactionSuccess) {
+        const transactionData = await txnDetails();
+        transactionData.MMID = transactionData.MMID;
+        try {
+          await connectToMachineUser(transactionData);
+          transactionSuccess = true;
+        } catch (err) {
+          retryCount++;
+          console.log(`Transaction failed. Retries left: ${3 - retryCount}`);
+        }
+      }
+      if (!transactionSuccess) {
+        console.log("Transaction failed after 3 attempts. Returning to menu.");
+      }
     } else if (option === "2") {
-      // socket.send(JSON.stringify({
-      //   type: "view_balance",
-      //   MMID,
-      // }));
-      console.log("Oops! That one's still under construction 🚧 — mind picking another option for now?");
+      await requestBalance(socket, MMID);
     } else if (option === "3") {
       console.log("Logging out. Goodbye!");
-      rl.close();
       socket.close();
       break;
     } else {
@@ -67,21 +84,39 @@ async function handleUserSession(socket, MMID) {
   }
 }
 
+function requestBalance(socket, MMID) {
+  return new Promise((resolve, reject) => {
+    socket.once("message", (message) => {
+      try {
+        const response = JSON.parse(message);
+        if (response.type === "balance_info") {
+          console.log(`\n💰 Your current balance is: ₹${response.balance}\n`);
+          resolve();
+        } else if (response.type === "error") {
+          console.log(`❌ Error: ${response.errorType}`);
+          resolve(); // or reject(new Error(...)) if you want to handle errors differently
+        }
+      } catch (err) {
+        console.error("⚠️ Failed to parse bank message:", err.message);
+        reject(err);
+      }
+    });
+
+    // Send balance request
+    socket.send(
+      JSON.stringify({
+        type: "view_balance",
+        MMID,
+      })
+    );
+  });
+}
 
 const connectToBankUser = () => {
   const socket = new WebSocket("ws://localhost:8080");
-
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const askQuestion = (query) => {
-    return new Promise((resolve) => rl.question(query, resolve));
-  };
+  let loginAttempts = 0;
 
   return new Promise(async (resolve, reject) => {
-    // Wrap in a Promise
     try {
       console.log("\n1. New User");
       console.log("2. Existing User");
@@ -99,7 +134,7 @@ const connectToBankUser = () => {
           if (banks[bankName]) break;
           console.log("Invalid bank name. Please enter a valid one.");
         }
-          
+
         let ifsc;
         while (true) {
           ifsc = (await askQuestion("Enter IFSC: ")).toLowerCase();
@@ -113,14 +148,14 @@ const connectToBankUser = () => {
           if (/^\d{10}$/.test(phoneNum)) break;
           console.log("Invalid phone number. Please enter a 10-digit number.");
         }
-          
+
         let pin;
         while (true) {
           pin = await askQuestion("Enter 4-digit PIN: ");
           if (/^\d{4}$/.test(pin)) break;
           console.log("Invalid PIN. Please enter a 4-digit number.");
         }
-          
+
         let pwd;
         while (true) {
           pwd = await askQuestion("Enter password (min 6 characters, at least one number and one letter): ");
@@ -148,13 +183,16 @@ const connectToBankUser = () => {
           })
         );
       } else if (choice == "2") {
+        await performLogin();
+      }
+      async function performLogin() {
         let phoneNum;
         while (true) {
           phoneNum = await askQuestion("Enter Phone Number (10 digits): ");
           if (/^\d{10}$/.test(phoneNum)) break;
           console.log("Invalid phone number. Please enter a 10-digit number.");
         }
-            
+
         let pin;
         while (true) {
           pin = await askQuestion("Enter your 4-digit PIN: ");
@@ -171,85 +209,83 @@ const connectToBankUser = () => {
           })
         );
       }
-
-      rl.close();
-
-      socket.onmessage = (event) => {
+      socket.onmessage = async (event) => {
         const response = JSON.parse(event.data);
 
         if (response.type === "error") {
-          console.log(`Error: ${response.errorType}`);
-          reject(response);
+          console.log(`❌ Error: ${response.errorType}`);
+          
+          if (choice === "2") {
+            // Login retry logic only for existing users
+            loginAttempts++;
+            if (loginAttempts >= 3) {
+              console.log("🚫 Login failed after 3 attempts. Exiting.");
+              socket.close();
+              return reject("Login failed");
+            } else {
+              console.log(`🔁 Retrying login... (${3 - loginAttempts} retries left)\n`);
+              await performLogin(); // retry
+            }
+          } else {
+            // For new user creation errors
+            socket.close();
+            reject(response.errorType);
+          }
+
         } else if (response.type === "success") {
-          console.log(
-            `Success: ${response.successType}, MMID: ${response.MMID}`
-          );
-          handleUserSession(socket, response.MMID);
+          console.log(`✅ Success: ${response.successType}, MMID: ${response.MMID}`);
+          await handleUserSession(socket, response.MMID);
           resolve({ MMID: response.MMID, successType: response.successType });
         }
       };
 
-      socket.onerror = (error) => reject(error);
+      socket.onerror = (err) => {
+        console.error("❌ Socket error:", err.message);
+        reject(err);
+      };
     } catch (error) {
-      rl.close();
       reject(error);
     }
   });
 };
 
-const connectToMachineUser = (transactionData, callback) => {
-  const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
+const connectToMachineUser = (transactionData) => {
+  return new Promise((resolve, reject) => {
+    const machineSocket = new WebSocket("ws://localhost:8081");
 
-  
-  machineSocket.onopen = () => {
-    // on open, it sends a message to the server
-    machineSocket.send(
-      JSON.stringify({
-        type: "txn",
-        userType: "user",
-        encodedData: transactionData, // for now the data is not being hashed and sent, rather it is directly being sent becuase unclear whether pin needs to be hashed or whole txnData
-      })
-    );
-  };
+    machineSocket.onopen = () => {
+      machineSocket.send(
+        JSON.stringify({
+          type: "txn",
+          userType: "user",
+          encodedData: transactionData,
+        })
+      );
+    };
 
-  machineSocket.onmessage = (event) => {
-    // console.log("Message from server:", event.data);
-    callback(event.data);
-    machineSocket.close();
+    machineSocket.onmessage = (event) => {
+      console.log("Message from server:", event.data);
+      machineSocket.close();
+      resolve();
+    };
 
-    // // the user receives the QR code from the machine, after they try to initiate a txn, they mut scan qr code, find vmid of the merchant and input it to confirm the txn
-    // if (event.data.type === "scanCode") {
-    //   machineSocket.send(
-    //     JSON.stringify({
-    //       VMID: 23213,
-    //       dtype: "confirmTxn",
-    //     })
-    //   );
-    // }
-  };
-};
-const txnDetails = () => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+    machineSocket.onerror = (error) => {
+      console.error("Error with machine socket:", error);
+      reject(error);
+    };
   });
+};
 
+const txnDetails = () => {
   const machineSocket = new WebSocket("ws://localhost:8081");
-
-  const askQuestion = (query) => {
-    return new Promise((resolve) => rl.question(query, resolve));
-  };
 
   return new Promise((resolve, reject) => {
     machineSocket.on("open", async () => {
-      // Ensure connection is open
       try {
         console.log("\nTransaction Initialization");
         const merchantName = await askQuestion("Enter Merchant Name: ");
 
-        machineSocket.send(
-          JSON.stringify({ event: "getQRCodeUrl", merchantName })
-        );
+        machineSocket.send(JSON.stringify({ event: "getQRCodeUrl", merchantName }));
 
         machineSocket.onmessage = async (message) => {
           const data = JSON.parse(message.data);
@@ -257,44 +293,34 @@ const txnDetails = () => {
           if (data.event === "qrCodeUrl") {
             console.log("Received QR Code URL:", data.url);
             const qrCodeUrl = data.url;
-            const base64Data = qrCodeUrl.replace(
-              /^data:image\/png;base64,/,
-              ""
-            );
+            const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
             fs.writeFileSync(`${merchantName}qrcode.png`, base64Data, "base64");
 
             console.log("Scanning Merchant QR Code...");
-            const vmid = await askQuestion(
-              "Enter Virtual Merchant ID (VMID) from QR Code: "
-            );
+            const vmid = await askQuestion("Enter Virtual Merchant ID (VMID) from QR Code: ");
 
             let txnAmount;
             while (true) {
               txnAmount = await askQuestion("Enter Transaction Amount: ");
-              if (!isNaN(parseFloat(txnAmount)) && parseFloat(txnAmount) > 0)
-                break;
-              console.log(
-                "Invalid amount. Please enter a valid positive number."
-              );
+              if (!isNaN(parseFloat(txnAmount)) && parseFloat(txnAmount) > 0) break;
+              console.log("Invalid amount. Please enter a valid positive number.");
             }
 
             const mmid = await askQuestion("Enter your MMID: ");
             const pin = await askQuestion("Enter your PIN: ");
 
             const txnData = {
-              VMID: vmid, 
+              VMID: vmid,
               txnAmount: parseFloat(txnAmount),
-              pin:encryptWithPublicKey(pin), // Encrypt the PIN with the public key
-              MMID: mmid
+              pin: encryptWithPublicKey(pin),
+              MMID: mmid,
             };
-            // hash the txnData and send it to the machine
-            rl.close();
+
             resolve(txnData);
             machineSocket.close();
           }
         };
       } catch (error) {
-        rl.close();
         reject(error);
         machineSocket.close();
       }
@@ -302,7 +328,6 @@ const txnDetails = () => {
 
     machineSocket.on("error", (err) => {
       console.error("WebSocket error:", err);
-      rl.close();
       reject(err);
     });
   });
