@@ -42,13 +42,6 @@ const connectToBankMerchant = () =>{
       if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(pwd)) break;
       console.log("Invalid password. Must be at least 6 characters with at least one number and one letter.");
     }
-    
-    
-    // mer_name = await askQuestion("enter name: ");
-    // bankName = await askQuestion("enter bank name: ");//this wasn't mentioned in the assignment.
-    // ifsc = await askQuestion("enter ifsc: ");
-    // pwd = await askQuestion("enter password: ");
-    // balance = await askQuestion("enter balance: ");
     // Checking whether balance is valid or not at merchant side
     while(true){
       balance = await askQuestion("enter balance: ");
@@ -102,7 +95,7 @@ const connectToMachineMerchant = (merchantID, merchantName) =>{
           JSON.stringify({
             type: "init",
             userType: "merchant", 
-            merchantID: merchantID,// will have to update with the merchant id generated.
+            merchantID: merchantID,
             merchantName: merchantName
           })
         );
@@ -110,15 +103,14 @@ const connectToMachineMerchant = (merchantID, merchantName) =>{
       
       machineSocket.onmessage = (event) => {
         const response=JSON.parse(event.data)
-        if(response.qrCodeUrl){
-          console.log("QR Code Generated:", response.qrCodeUrl);
-          console.log("Open this URL in your browser to view the QR Code.");
+        if(response.type === "qrCodeUrl"){
+          console.log("QR Code Generated");
+        } else if(response.type === "txn_approved") {
+          console.log("Message from server:", response.message);
         } else {
           console.log("Error:", response.error);
         }
-      }; 
-      
-
+      };
 }
 
 module.exports = {connectToBankMerchant, connectToMachineMerchant};

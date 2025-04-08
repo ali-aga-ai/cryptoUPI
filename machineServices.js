@@ -4,6 +4,7 @@ const QRCode = require("qrcode");
 const createSpeck = require("generic-speck");
 const merchantQRCodes = require("./machineSources.js");
 const { banks } = require("./bank_details.js");
+const merchantSockets = {};
 
 const handleMerchant = async (socket, data) => {
   const speck = createSpeck({
@@ -41,6 +42,13 @@ const handleMerchant = async (socket, data) => {
     fs.writeFileSync("qrcode.png", base64Data, "base64");
 
     console.log("QR code saved as qrcode.png");
+    merchantSockets[data.merchantID] = socket;
+    socket.send(
+      JSON.stringify({
+        type: "qrCodeUrl",
+        url: qrCodeUrl,
+      })
+    );
   }
 };
 
@@ -83,6 +91,14 @@ const handleUser = async (socket, data) => {
       const resp = await validateTxnThroughBank(data, merchantID);
       if (resp.approvalStatus) {
         socket.send("Transaction Approved");
+        const merchantSocket = merchantSockets[merchantID];
+        if (merchantSocket && merchantSocket.readyState === WebSocket.OPEN) {
+          merchantSocket.send(JSON.stringify({
+            type : "txn_approved",
+            message: "Transaction Approved by User",
+            txnDetails: resp.txnDetails,
+          }));
+        }
       } else {
         socket.send(`Transaction Declined, reason: ${resp.approvalMessage}`);
       }
