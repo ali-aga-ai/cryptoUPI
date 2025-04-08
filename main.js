@@ -37,11 +37,11 @@ rl.question(
         turnOnBank();
         console.log("Bank Server Running");
       } else if (choice == "B") {
-        const userDetails = await connectToBankUser();
-        // const transactionData = await txnDetails();
-        // console.log("User:", userDetails);
-        // console.log("Transaction:", transactionData);
-        // connectToMachineUser(transactionData)
+        try {
+          const userDetails = await connectToBankUser();
+        } catch (err) {
+          console.error("❌ Login session ended with error:", err);
+        }
       } else if (choice == "C") {
         connectToBankMerchant();
       } else if (choice == "D") {
