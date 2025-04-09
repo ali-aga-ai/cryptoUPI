@@ -1,16 +1,27 @@
-// sockets in ws are async so dont rely on ordering of code
+// sockets in ws are async so don't rely on ordering of code
 const WebSocket = require("ws");
 const crypto = require("crypto");
+const os = require("os");
+const fs = require("fs");
+
 const {
   handleMerchant,
   handleUser,
   handleUPIMachine,
   handleBalanceEnquiry,
 } = require("./bankServices");
+
 const { banks } = require("./bank_details.js");
 const merchants = require("./bank_state");
 
-const fs = require("fs");
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const iface of Object.values(interfaces).flat()) {
+    if (iface.family === "IPv4" && !iface.internal) return iface.address;
+  }
+  return "127.0.0.1";
+}
+
 const KEY_PATH = "./bank_rsa_keys";
 // Load existing keys or generate new ones
 let publicKey, privateKey;
@@ -31,9 +42,9 @@ if (fs.existsSync(`${KEY_PATH}_public.pem`)) {
 
 global.bankPrivateKey = privateKey;
 global.bankPublicKey = publicKey;
-const turnOnBank = () => {
-  const server = new WebSocket.Server({ port: 8080 });
 
+const turnOnBank = () => {
+  const roles = {};
   const users = {
     alice: {
       pwd: "password123",
@@ -51,41 +62,47 @@ const turnOnBank = () => {
   const machines = {};
   const txns = {};
 
-  console.log("Users :  ", users);
-  console.log("Merchants :  ", merchants);
-  console.log("Machines :  ", machines);
-  console.log("Txns :  ", txns);
+  console.log("Users:", users);
+  console.log("Merchants:", merchants);
+  console.log("Machines:", machines);
+  console.log("Txns:", txns);
+  console.log("Roles:", roles);
+
+  const server = new WebSocket.Server({ port: 8081 }, () => {
+    const ip = getLocalIP();
+    const bankKey = `${ip}:8081`;
+    roles[bankKey] = "banker";
+    console.log(`Bank WebSocket server running on ws://${bankKey}`);
+  });
 
   server.on("connection", (socket, req) => {
-    // socket is the socket of the client who is connecting
-
     const ip = req.socket.remoteAddress;
     const port = req.socket.remotePort;
 
-    console.log(`Client connected with ip ${ip} and port ${port} `);
+    console.log(`WebSocket client connected with IP ${ip} and port ${port}`);
 
-    socket.on("message", (message) => {
-      const data = JSON.parse(message);
-      console.log("Data received: ", data);
-      if (data.userType == "user") {
-        data.ip = ip;
-        data.port = port;
-        handleUser(socket, data, users);
+    socket.on("message", (msg) => {
+      let data;
+      try {
+        data = JSON.parse(msg);
+      } catch (e) {
+        console.error("Invalid JSON:", msg.toString());
+        return;
       }
-      if (data.userType == "merchant") {
-        data.ip = ip;
-        data.port = port;
-        handleMerchant(socket, data, merchants);
-      }
-      if (data.userType == "machine") {
-        data.ip = ip;
-        data.port = port;
-        handleUPIMachine(socket, data, machines, users, merchants);
-      }
-      if (data.type == "view_balance"){
-        handleBalanceEnquiry(socket, data, users);        
-      }
+
+      data.ip = ip;
+      data.port = port;
+
+      if (data.userType === "user") handleUser(socket, data, users);
+      else if (data.userType === "merchant") handleMerchant(socket, data, merchants);
+      else if (data.userType === "machine") handleUPIMachine(socket, data, machines, users, merchants);
+      else if (data.type === "view_balance") handleBalanceEnquiry(socket, data, users);
+    });
+
+    socket.on("close", () => {
+      console.log(`Client disconnected: ${ip}:${port}`);
     });
   });
 };
+
 module.exports = { turnOnBank };

@@ -107,6 +107,7 @@ io.on('connection', (socket) => {
   // Machine role
   socket.on('turnOnMachine', async (data) => {
     try {
+      console.log("hello world")
       await turnOnMachine(data);
       socket.emit('machineStatus', { status: 'On' });
       console.log('Machine turned on');

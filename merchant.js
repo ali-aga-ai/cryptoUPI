@@ -1,9 +1,10 @@
 const readline = require("readline");
 const WebSocket = require("ws");
 const { banks } = require("./bank_details.js");
+const net = require('net');
 
 const connectToBankMerchant = () =>{
-  const socket = new WebSocket("ws://localhost:8080"); // finds the socket of the bank to connect to
+  const socket = net.createConnection({ host: '', port: 8080 });
 
   const rl = readline.createInterface({
     input: process.stdin,

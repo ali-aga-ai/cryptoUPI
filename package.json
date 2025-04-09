@@ -12,6 +12,8 @@
     "crypto-js": "^4.2.0",
     "express": "^5.1.0",
     "generic-speck": "^1.1.1",
+    "net": "^1.0.2",
+    "payment-system": "file:",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "ws": "^8.18.1"
