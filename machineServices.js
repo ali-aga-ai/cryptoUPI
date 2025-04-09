@@ -111,7 +111,8 @@ const handleUser = async (socket, data) => {
 
 const validateTxnThroughBank = (data, merchantID) => {
   return new Promise((resolve, reject) => {
-    const bankSocket = new WebSocket("ws://localhost:8080"); // Connects to the bank socket
+    const BANK_IP = "192.168.118.36"
+    const bankSocket = new WebSocket(`ws:${BANK_IP}//:8081`); // Connects to the bank socket
 
     // When the WebSocket connection opens, send the validation request
     bankSocket.onopen = () => {

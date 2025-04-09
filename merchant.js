@@ -4,8 +4,8 @@ const { banks } = require("./bank_details.js");
 const net = require('net');
 
 const connectToBankMerchant = () =>{
-  const socket = net.createConnection({ host: '', port: 8080 });
-
+  const BANK_IP = "192.168.118.65"
+  const socket = new WebSocket(`ws://${BANK_IP}:8081`); // finds the socket of the bank to connect to
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -88,7 +88,8 @@ const connectToBankMerchant = () =>{
 }
 
 const connectToMachineMerchant = (merchantID, merchantName) =>{
-    const machineSocket = new WebSocket("ws://localhost:8081"); // finds the socket of the machine to connect to
+  const MACHINE_IP = "192.168.118.36"
+    const machineSocket = new WebSocket(`ws://${MACHINE_IP}:8082`); // finds the socket of the machine to connect to
 
     machineSocket.onopen = () => {
         // on open, it sends a message to the server

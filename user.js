@@ -113,7 +113,8 @@ function requestBalance(socket, MMID) {
 }
 
 const connectToBankUser = () => {
-  const socket = new WebSocket("ws://localhost:8080");
+  const BANK_IP = "192.168.118.36"
+  const socket = new WebSocket(`ws://${BANK_IP}:8081`);
   let loginAttempts = 0;
 
   return new Promise(async (resolve, reject) => {
