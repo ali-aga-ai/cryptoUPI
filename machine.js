@@ -2,10 +2,10 @@ const WebSocket = require("ws");
 const { handleMerchant, handleUser } = require("./machineServices");
 const merchantQRCodes = require("./machineSources.js");
 const {getLocalIP} = require("./getIP")
+const { IPs } = require("./ip.js");
 
 const connectToBankMachine = () =>{
-  const BANK_IP = "192.168.118.65"; // You could load from a config file too
-  const socket = new WebSocket(`ws://${BANK_IP}:8081`);
+  const socket = new WebSocket(IPs.BANK);
     socket.onopen = () => {
         // on open, it sends a message to the server
         socket.send(

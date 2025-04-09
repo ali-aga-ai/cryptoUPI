@@ -5,6 +5,7 @@ const createSpeck = require("generic-speck");
 const merchantQRCodes = require("./machineSources.js");
 const { banks } = require("./bank_details.js");
 const merchantSockets = {};
+const { IPs } = require("./ip.js");
 
 const handleMerchant = async (socket, data) => {
   const speck = createSpeck({
@@ -111,8 +112,7 @@ const handleUser = async (socket, data) => {
 
 const validateTxnThroughBank = (data, merchantID) => {
   return new Promise((resolve, reject) => {
-    const BANK_IP = "192.168.118.65"
-    const bankSocket = new WebSocket(`ws:${BANK_IP}//:8081`); // Connects to the bank socket
+    const bankSocket = new WebSocket(IPs.BANK); // Connects to the bank socket
 
     // When the WebSocket connection opens, send the validation request
     bankSocket.onopen = () => {
