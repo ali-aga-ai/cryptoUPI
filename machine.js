@@ -4,7 +4,7 @@ const merchantQRCodes = require("./machineSources.js");
 const {getLocalIP} = require("./getIP")
 
 const connectToBankMachine = () =>{
-  const BANK_IP = "192.168.118.65"; // You could load from a config file too
+  const BANK_IP = "192.168.118.62"; // You could load from a config file too
   const socket = new WebSocket(`ws://${BANK_IP}:8081`);
     socket.onopen = () => {
         // on open, it sends a message to the server
