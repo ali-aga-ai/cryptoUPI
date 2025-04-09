@@ -7,8 +7,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { banks } = require("./bank_details.js");
 const merchants = require("./bank_state");
-
-const MACHINE_IP = "192.168.118.251";
+const MACHINE_IP="192.168.118.251"
 const encryptWithPublicKey = (plaintext) => {
   return crypto.publicEncrypt(
     {
@@ -114,7 +113,7 @@ function requestBalance(socket, MMID) {
 }
 
 const connectToBankUser = () => {
-  const BANK_IP = "192.168.118.65"
+  const BANK_IP = "192.168.118.36"
   const socket = new WebSocket(`ws://${BANK_IP}:8081`);
   let loginAttempts = 0;
 
@@ -253,7 +252,7 @@ const connectToBankUser = () => {
 
 const connectToMachineUser = (transactionData) => {
   return new Promise((resolve, reject) => {
-    const machineSocket = new WebSocket(`ws:${MACHINE_IP}//:8081`); // Connects to the bank socket
+    const machineSocket = new WebSocket("ws://localhost:8081");
 
     machineSocket.onopen = () => {
       machineSocket.send(
@@ -279,8 +278,7 @@ const connectToMachineUser = (transactionData) => {
 };
 
 const txnDetails = () => {
-  //const machineSocket = new WebSocket("ws://localhost:8081");
-  const machineSocket = new WebSocket(`ws:${MACHINE_IP}//:8081`); // Connects to the bank socket
+  const machineSocket = new WebSocket("ws://localhost:8081");
 
   return new Promise((resolve, reject) => {
     machineSocket.on("open", async () => {
