@@ -1,6 +1,6 @@
-# 💳 Banking Payment System
+# 💳 Banking Payment System - A Cryptography-Driven UPI Simulation
 
-A **simulated digital banking system** that models real-world banking interactions between **banks**, **users**, **merchants**, and **machines (ATMs)** — all connected via **WebSockets** over a network using IP addresses.
+A **simulated digital payment system** using cryptographic techniques, inspired by real-world UPI systems. This project models secure banking interactions between **banks**, **users**, **merchants**, and **ATMs**, all communicating through **WebSockets** and implementing lightweight **block ciphers** (e.g., Speck) for transaction-level security.
 
 ---
 
@@ -23,6 +23,7 @@ This system provides a **role-based architecture**, enabling different functiona
 - **🏪 Merchant**: Business entity that can register to receive payments. Each merchant is identified via a VMID and QR code.
 - **🏧 Machine**: Acts as an ATM; connects with the bank to simulate machine-based interactions.
 
+Each transaction uses **lightweight block cipher encryption** (Speck) for confidentiality and integrity.
 All modules communicate securely through **WebSockets**, enabling real-time financial operations in a decentralized yet synchronized manner.
 
 ---
@@ -44,6 +45,14 @@ All modules communicate securely through **WebSockets**, enabling real-time fina
    - The user scans the merchant’s QR Code to fetch the VMID.
    - After **PIN authentication**, a transaction is initiated.
    - The transaction updates both the **user’s** and **merchant’s** balances in real time.
+
+---
+
+## 🔐 Cryptographic Backbone
+
+- ✳️ Uses the **Speck block cipher** (lightweight and efficient)
+- 🧾 PIN authentication uses secure comparison
+- 🔄 Encrypted transaction payloads using custom encryption modules
 
 ---
 
