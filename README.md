@@ -7,7 +7,7 @@ User: Client who can connect to the bank and perform transactions
 Merchant: Business entity that can process payments
 Machine: ATM machine that connects to the bank network
 
-It contains a role-based system with different functionalities which work together in a network with connectivity between all entities using IP addressed and Web Sockets. 
+It contains a role-based system with different functionalities which work together in a network with connectivity between all entities using IP addresses and Web Sockets. 
 
 Flow of the project: 
 
