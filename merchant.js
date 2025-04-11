@@ -108,6 +108,9 @@ const connectToMachineMerchant = (merchantID, merchantName) =>{
           console.log("QR Code Generated");
         } else if(response.type === "txn_approved") {
           console.log("Message from server:", response.message);
+          console.log("User:", response.mmid);
+          console.log("Transaction Amount:", response.txnAmount);
+          console.log("Merchant Balance:", response.mer_balance);
         } else {
           console.log("Error:", response.error);
         }

@@ -3,8 +3,20 @@ const { handleMerchant, handleUser } = require("./machineServices");
 const merchantQRCodes = require("./machineSources.js");
 const {getLocalIP} = require("./getIP")
 const { IPs } = require("./ip.js");
+const { exec } = require('child_process');
 
 const connectToBankMachine = () =>{
+exec('python3 unitTest.py', (error, stdout, stderr) => {
+  if (error) {
+    console.error(`Error: ${error.message}`);
+    return;
+  }
+  if (stderr) {
+    console.error(`Stderr: ${stderr}`);
+    return;
+  }
+  console.log(`Output: ${stdout}`);
+});
   const socket = new WebSocket(IPs.BANK);
     socket.onopen = () => {
         // on open, it sends a message to the server
