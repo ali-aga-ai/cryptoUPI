@@ -7,7 +7,7 @@ A **simulated digital banking system** that models real-world banking interactio
 ## 👥 Team Members
 
 - **Mohammed Kamaalullah Khan Quadri** - [2022A7PS0109H]
-- **Ali Mehdi Aga** - [2022A7PS1282H]
+- **Ali Mahdi Aga** - [2022A7PS1288H]
 - **Mahesh Pappu** - [2022A7PS0142H]
 - **Abdul Rahman Yakoob** - [2022A7PS0021H]
 - **Mohammed Adeeb Ulla** - [2022AAPS1475H]
