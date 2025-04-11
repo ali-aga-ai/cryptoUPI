@@ -6,7 +6,7 @@ const { IPs } = require("./ip.js");
 const { exec } = require('child_process');
 
 const connectToBankMachine = () =>{
-exec('python3 unitTest.py', (error, stdout, stderr) => {
+exec('python3 speck.py', (error, stdout, stderr) => {
   if (error) {
     console.error(`Error: ${error.message}`);
     return;
