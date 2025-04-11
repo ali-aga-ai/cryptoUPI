@@ -8,14 +8,14 @@ const { exec } = require('child_process');
 const connectToBankMachine = () =>{
 exec('python3 unitTest.py', (error, stdout, stderr) => {
   if (error) {
-    console.error(Error: ${error.message});
+    console.error(`Error: ${error.message}`);
     return;
   }
   if (stderr) {
-    console.error(Stderr: ${stderr});
+    console.error(`Stderr: ${stderr}`);
     return;
   }
-  console.log(Output: ${stdout});
+  console.log(`Output: ${stdout}`);
 });
   const socket = new WebSocket(IPs.BANK);
     socket.onopen = () => {
@@ -43,7 +43,7 @@ const turnOnMachine = () => {
     const ip = req.socket.remoteAddress;
     const port = req.socket.remotePort;
 
-    console.log(Client connected with IP ${ip} and port ${port});
+    console.log(`Client connected with IP ${ip} and port ${port}`);
 
     socket.on("message", (message) => {
       const data = JSON.parse(message);
