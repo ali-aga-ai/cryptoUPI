@@ -76,3 +76,8 @@ Ensure the following are installed:
    ``` bash
 
    node main.js
+
+4. **Entering IP addresses**
+
+   In ip.js file, SERVICE: "ws://[ip_address]:[port]"
+   Replace ip_address and port with IP ADDRESS and PORT of the service respectively.
