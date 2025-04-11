@@ -61,13 +61,16 @@ const handleUser = async (socket, data) => {
       // Handle the transaction validation
       const resp = await validateTxnThroughBank(data, merchantID);
       if (resp.approvalStatus) {
-        socket.send("Transaction Approved");
+        socket.send("Transaction Approved, amount: " + resp.txnAmount);
+        console.log("Transaction Approved, sending approval msg to both user and merchant");
         const merchantSocket = merchantSockets[merchantID];
         if (merchantSocket && merchantSocket.readyState === WebSocket.OPEN) {
           merchantSocket.send(JSON.stringify({
             type : "txn_approved",
             message: "Transaction Approved by User",
-            txnDetails: resp.txnDetails,
+            txnAmount: resp.txnAmount,
+            mmid: resp.mmid,
+            mer_balance: resp.mer_balance,
           }));
         }
       } else {
@@ -95,6 +98,7 @@ const validateTxnThroughBank = (data, merchantID) => {
           userType: "machine"
         })
       );
+      console.log("Validation request sent to bank.");
     };
 
     // When a message is received from the WebSocket, resolve the promise

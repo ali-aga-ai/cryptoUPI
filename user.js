@@ -290,12 +290,10 @@ const txnDetails = () => {
           const data = JSON.parse(message.data);
 
           if (data.event === "qrCodeUrl") {
-            console.log("Received QR Code URL:", data.url);
             const qrCodeUrl = data.url;
             const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
             fs.writeFileSync(`${merchantName}qrcode.png`, base64Data, "base64");
 
-            console.log("Scanning Merchant QR Code...");
             const vmid = await askQuestion("Enter Virtual Merchant ID (VMID) from QR Code: ");
 
             let txnAmount;

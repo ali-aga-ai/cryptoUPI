@@ -220,10 +220,16 @@ const handleUPIMachine = (socket, data, machines, users, merchants) => {
       if (users[MMID].balance >= txnAmount) {
         users[MMID].balance = String(Number(users[MMID].balance) - Number(txnAmount));
         merchants[merchantID].balance = String(Number(merchants[merchantID].balance) + Number(txnAmount));
-        console.log(users)
-        console.log(merchants)
+        console.log("Users: ",users)
+        console.log("Merchants: ",merchants)
         socket.send(
-          JSON.stringify({ approvalStatus: true, approvalMessage: "Accepted" })
+          JSON.stringify({ 
+            approvalStatus: true, 
+            approvalMessage: "Accepted",
+            mmid: users[MMID].mmid,
+            txnAmount: txnAmount,
+            mer_balance: merchants[merchantID].balance,
+          })
         );
       } else {
         socket.send(
