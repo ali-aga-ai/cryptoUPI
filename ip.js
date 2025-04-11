@@ -1,9 +1,8 @@
 module.exports = {
-    IPs: {
-      BANK: "ws://localhost:8081",
-      MACHINE: "ws://localhost:8082",
-      MERCHANT: "ws://localhost:8083",
-      USER: "ws://localhost.65:8084",
-    },
+  IPs: {
+    BANK: "ws://172.16.245.46:8081",
+    MACHINE: "ws://172.16.245.46:8082",
+    MERCHANT: "ws://172.16.245.46:8083",
+    USER: "ws://172.16.245.46:8084",
+  },
 };
-  

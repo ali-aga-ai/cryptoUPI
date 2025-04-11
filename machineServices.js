@@ -6,88 +6,58 @@ const merchantQRCodes = require("./machineSources.js");
 const { banks } = require("./bank_details.js");
 const merchantSockets = {};
 const { IPs } = require("./ip.js");
+const axios = require('axios');
+const fs = require("fs");
 
 const handleMerchant = async (socket, data) => {
-  const speck = createSpeck({
-    bits: 16,
-    rounds: 22,
-    rightRotations: 7,
-    leftRotations: 2,
-  });
-  const key = [0x0100, 0x0908, 0x1110, 0x1918];
-
   if (data.type == "init") {
-    const identifier = data.ip + ":" + data.port;
+    try {
+      console.log("Merchant ID in hex", data.merchantID);
 
-    const currentTime = new Date().getTime();
-    console.log("Merchant ID in hex", data.merchantID);
-    
-    // Create a unique ID that combines merchant ID and a checksum
-    // This approach uses a hash of the merchant ID as a checksum
-    const merchantIDHex = data.merchantID.padStart(16, '0'); // Ensure 16 characters (64 bits)
-    const checksum = crypto.createHash('md5').update(merchantIDHex).digest('hex').substring(0, 8);
-    const uniqueID = `${merchantIDHex}-${checksum}`;
-    
-    console.log("Unique ID with checksum:", uniqueID);
-    
-    // Generate QR code directly with this unique ID
-    const qrCodeUrl = await QRCode.toDataURL(uniqueID);
+      const res = await axios.post('http://localhost:5000/encrypt', {
+        plaintext: data.merchantID
+      });
 
-    const fs = require("fs");
-    const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
-    merchantQRCodes[data.merchantName] = qrCodeUrl; // saving QR codes using merchant name
+      const uniqueID = res.data.ciphertext.toString();
 
-    console.log(merchantQRCodes);
-    console.log(Object.keys(merchantQRCodes).length);
+      console.log(res.data)
+      console.log(res.data.ciphertext)
+      console.log("VMID is: " ,uniqueID)
 
-    fs.writeFileSync("qrcode.png", base64Data, "base64");
+      const qrCodeUrl = await QRCode.toDataURL(uniqueID);
+      const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, "");
 
-    console.log("QR code saved as qrcode.png");
-    merchantSockets[data.merchantID] = socket;
-    socket.send(
-      JSON.stringify({
+      merchantQRCodes[data.merchantName] = qrCodeUrl;
+      fs.writeFileSync("qrcode.png", base64Data, "base64");
+
+      console.log("QR code saved as qrcode.png");
+      merchantSockets[data.merchantID] = socket;
+
+      socket.send(JSON.stringify({
         type: "qrCodeUrl",
         url: qrCodeUrl,
-      })
-    );
+      }));
+
+    } catch (err) {
+      console.error(err);
+    }
   }
 };
 
+
 const handleUser = async (socket, data) => {
-  const speck = createSpeck({
-    bits: 16,
-    rounds: 22,
-    rightRotations: 7,
-    leftRotations: 2,
-  });
-  const key = [0x0100, 0x0908, 0x1110, 0x1918];
 
   if (data.type == "txn") {
     try {
       console.log(data);
       const encodedData = data.encodedData.VMID;
       
-      // Parse the merchant ID directly from the QR code data
-      // Expected format: "merchantIDHex-checksum"
-      const parts = encodedData.split('-');
+      const res = await axios.post('http://localhost:5000/decrypt',{ciphertext: encodedData});
       
-      if (parts.length !== 2) {
-        throw new Error("Invalid QR code format. Expected merchantID-checksum format.");
-      }
-      
-      const merchantIDHex = parts[0];
-      const receivedChecksum = parts[1];
-      
-      // Verify the checksum to ensure data integrity
-      const calculatedChecksum = crypto.createHash('md5').update(merchantIDHex).digest('hex').substring(0, 8);
-      
-      if (receivedChecksum !== calculatedChecksum) {
-        throw new Error("Checksum verification failed. The QR code data may be corrupted.");
-      }
-      
-      console.log("Verified merchant ID from QR code:", merchantIDHex);
-      const merchantID = merchantIDHex;
-      
+      console.log("res data: ", res.data)
+      const merchantID = res.data.plaintext;
+      console.log("Verified merchant ID from QR code:", merchantID);
+
       // Handle the transaction validation
       const resp = await validateTxnThroughBank(data, merchantID);
       if (resp.approvalStatus) {
