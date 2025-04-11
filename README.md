@@ -1,33 +1,76 @@
-Banking Payment System
+# 💳 Banking Payment System
 
-This project contains a simulated banking system with multiple connected entities: banks, users, merchants, and machines. The system allows for different roles and functionalities within a banking network.
+A **simulated digital banking system** that models real-world banking interactions between **banks**, **users**, **merchants**, and **machines (ATMs)** — all connected via **WebSockets** over a network using IP addresses.
 
-Bank: Central server that manages accounts and transactions
-User: Client who can connect to the bank and perform transactions
-Merchant: Business entity that can process payments
-Machine: ATM machine that connects to the bank network
+---
 
-It contains a role-based system with different functionalities which work together in a network with connectivity between all entities using IP addresses and Web Sockets. 
+## 👥 Team Members
 
-Flow of the project: 
+- **Mohammed Kamaalullah Khan Quadri** - [2022A7PS0109H]
+- **Ali Mehdi Aga** - [2022A7PS1282H]
+- **Mahesh Pappu** - [2022A7PS0142H]
+- **Abdul Rahman Yakoob** - [2022A7PS0021H]
+- **Mohammed Adeeb Ulla** - [2022AAPS1475H]
 
-First the bank and the machine server is started on different devices, allowing the machine to connect with the bank through sharing of IP addresses. Then on different devices the user and the machine server is connected to the bank (central server) after which a user or merchant can be created (if not existing already). Once the user is created the MMID is generated. For the merchant, once created, a QR code will be generated which on scanning gives the VMID of that merchant which will be used by the user while making a transaction. On authentication of the user through his PIN, the transaction will be initiated and the amount and balance of the User/Merchant will be updated.
+---
 
-Prerequisites
+## 🏗️ Project Overview
 
-Node.js (v12 or higher recommended)
-npm (Node Package Manager)
+This system provides a **role-based architecture**, enabling different functionalities for each type of participant in the network:
 
-Installation
+- **🏦 Bank**: Central server responsible for managing accounts, transactions, and secure communication.
+- **🧑‍💼 User**: Individual who can register, authenticate, and initiate transactions.
+- **🏪 Merchant**: Business entity that can register to receive payments. Each merchant is identified via a VMID and QR code.
+- **🏧 Machine**: Acts as an ATM; connects with the bank to simulate machine-based interactions.
 
-Clone this repository:
+All modules communicate securely through **WebSockets**, enabling real-time financial operations in a decentralized yet synchronized manner.
 
-git clone <repository-link>
+---
 
-Install dependencies:
+## 🔁 Workflow
 
-npm i
+1. **Start the Bank and Machine Servers** on separate devices.
+   - The **Machine Server** connects to the **Bank Server** using IP-based WebSocket communication.
 
-Run the application:
+2. **Start the User and Merchant Clients**, each on their respective devices.
+   - Connect them to the **Bank Server** by providing the bank’s IP address.
 
-node main.js
+3. **Registration & Setup**:
+   - Users and merchants can register if not already created.
+   - Upon user registration, a unique **MMID** (Mobile Money ID) is generated.
+   - Upon merchant registration, a unique **VMID** is created along with a **QR Code** representing it.
+
+4. **Transaction Flow**:
+   - The user scans the merchant’s QR Code to fetch the VMID.
+   - After **PIN authentication**, a transaction is initiated.
+   - The transaction updates both the **user’s** and **merchant’s** balances in real time.
+
+---
+
+## ⚙️ Prerequisites
+
+Ensure the following are installed:
+
+- [Node.js](https://nodejs.org/) (v12 or higher recommended)
+- npm (Node Package Manager, comes with Node.js)
+
+---
+
+## 🚀 Getting Started
+
+1. **Clone the Repository**
+   ```bash
+   git clone <repository-link>
+   cd cryptoUPI
+
+2. **Install Dependencies**
+
+   ```bash
+
+   npm install
+
+3. **Run the Application**
+
+   ``` bash
+
+   node main.js
