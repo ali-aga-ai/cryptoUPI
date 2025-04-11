@@ -22,8 +22,7 @@ Installation
 
 Clone this repository:
 
-git clone "repository link"
-cd banking-simulation
+git clone <repository-link>
 
 Install dependencies:
 
