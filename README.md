@@ -61,7 +61,7 @@ Ensure the following are installed:
 1. **Clone the Repository**
    ```bash
    git clone <repository-link>
-   cd banking-simulation
+   cd cryptoUPI
 
 2. **Install Dependencies**
 
