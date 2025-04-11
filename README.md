@@ -68,6 +68,8 @@ Ensure the following are installed:
    ```bash
 
    npm install
+   pip install simonspeckciphers
+   pip install flask
 
 3. **Run the Application**
 
